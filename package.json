@@ -1,0 +1,83 @@
+{
+    "name": "@remotex-labs/xansi",
+    "main": "dist/cjs/index.js",
+    "type": "module",
+    "types": "./dist/index.d.ts",
+    "module": "./dist/esm/index.js",
+    "author": "Garefild",
+    "version": "1.0.0-local",
+    "license": "Mozilla Public License Version 2.0",
+    "description": "A lightweight ANSI utility library for styling terminal output",
+    "homepage": "https://github.com/remotex-labs/xAnsi.git",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/remotex-labs/xAnsi.git"
+    },
+    "bugs": {
+        "url": "https://github.com/remotex-labs/xAnsi/issues"
+    },
+    "keywords": [
+        "cli",
+        "nasi",
+        "xansi",
+        "color",
+        "shadow",
+        "colors",
+        "terminal",
+        "formatting",
+        "ansi-colors",
+        "terminal-ui",
+        "escape-codes"
+    ],
+    "engines": {
+        "node": ">=20"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/esm/index.js",
+            "require": "./dist/cjs/index.js"
+        },
+        "./ansi.component": {
+            "types": "./dist/ansi.component.d.ts",
+            "import": "./dist/esm/ansi.component.js",
+            "require": "./dist/cjs/ansi.component.js"
+        },
+        "./xterm.component": {
+            "types": "./dist/xterm.component.d.ts",
+            "import": "./dist/esm/xterm.component.js",
+            "require": "./dist/cjs/xterm.component.js"
+        },
+        "./shadow.service": {
+            "types": "./dist/shadow.service.d.ts",
+            "import": "./dist/esm/shadow.service.js",
+            "require": "./dist/cjs/shadow.service.js"
+        }
+    },
+    "files": [
+        "dist",
+        "LICENSE",
+        "README.md"
+    ],
+    "scripts": {
+        "dev": "xbuild -w",
+        "lint": "xbuild --tc && eslint . -c ./eslint.config.mjs",
+        "build": "xbuild",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "preci:test": "xbuild",
+        "ci:test": "jest",
+        "ci:clean": "rm -rf ./dist",
+        "ci:build": "npm run build"
+    },
+    "devDependencies": {
+        "jest": "^29.7.0",
+        "eslint": "^9.27.0",
+        "typescript-eslint": "^8.32.1",
+        "eslint-plugin-tsdoc": "^0.4.0",
+        "@swc/jest": "^0.2.38",
+        "@types/node": "^22.15.19",
+        "@types/jest": "^29.5.14",
+        "@remotex-labs/xbuild": "^1.5.8"
+    }
+}
