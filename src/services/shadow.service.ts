@@ -375,7 +375,7 @@ export class ShadowRenderer {
 
     writeText(row: number, column: number, text: string, clean: boolean = false): void {
         // Validate input
-        if (row < 0 || column >= this.terminalWidth) return;
+        if (!Number.isInteger(row) || row < 0 || column >= this.terminalWidth) return;
 
         const line = this.contentBuffer[row] ??= [];
         const content = text.split('\n')[0];
