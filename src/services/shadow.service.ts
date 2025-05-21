@@ -97,7 +97,7 @@ export class ShadowRenderer {
      */
 
 
-    private contentBuffer: Array<CellInterface[]> = [];
+    private contentBuffer: Array<CellInterface[]> = Object.create(null);
 
     /**
      * Creates a new ShadowRenderer instance for terminal-based UI rendering
@@ -375,9 +375,9 @@ export class ShadowRenderer {
 
     writeText(row: number, column: number, text: string, clean: boolean = false): void {
         // Validate input
-        if (row < 0 || column >= this.terminalWidth) return;
+        if (!Number.isInteger(row) || row < 0 || column >= this.terminalWidth) return;
 
-        const line = this.contentBuffer[row] ??= [];
+        const line = this.contentBuffer[row] ??= Object.create(null);
         const content = text.split('\n')[0];
         const ansiLength = content.length - stripAnsi(content).length;
         const length = Math.min((this.terminalWidth - column) + ansiLength, content.length);
