@@ -96,8 +96,7 @@ export class ShadowRenderer {
      * @see CellInterface
      */
 
-
-    private contentBuffer: Array<CellInterface[]> = Object.create(null);
+    private contentBuffer: Array<CellInterface[]> = [];
 
     /**
      * Creates a new ShadowRenderer instance for terminal-based UI rendering
