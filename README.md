@@ -330,6 +330,331 @@ The Shadow Renderer is optimized for scenarios where:
 
 The diffing algorithm ensures minimal terminal I/O operations by tracking which cells have changed and only updating those specific positions.
 
+## Terminal Bouncing Blocks Animatio
+This TypeScript program creates a visually engaging terminal 
+animation featuring multiple colored blocks (█) that bounce around your terminal window.
+
+```ts
+import { ShadowRenderer, writeRaw, ANSI, xterm } from '@remotex-labs/xansi';
+import { createInterface } from 'readline';
+
+interface Ball {
+    x: number;
+    y: number;
+    dx: number;
+    dy: number;
+    colorStep: number;
+    prevColor: string;
+    nextColor: string;
+}
+
+class BouncingBalls {
+    private renderer: ShadowRenderer;
+    private width = 0;
+    private height = 0;
+    private intervalId: NodeJS.Timeout | null = null;
+    private balls: Ball[] = [];
+    private fadeSteps = 30;
+    private ballCount = 15;
+
+    constructor() {
+        this.renderer = new ShadowRenderer(this.height, this.width, 0, 0);
+        this.updateTerminalSize();
+
+        process.stdout.on('resize', () => this.updateTerminalSize());
+
+        writeRaw(ANSI.HIDE_CURSOR);
+        writeRaw(ANSI.CLEAR_SCREEN);
+
+        // Initialize multiple balls
+        this.initializeBalls();
+    }
+
+    private initializeBalls(): void {
+        this.balls = [];
+        for (let i = 0; i < this.ballCount; i++) {
+            const x = Math.floor(Math.random() * (this.width - 4));
+            const y = Math.floor(Math.random() * (this.height - 2));
+            const dx = Math.random() > 0.5 ? 1 : -1;
+            const dy = Math.random() > 0.5 ? 1 : -1;
+            const initialColor = this.getColor(x, y);
+
+            this.balls.push({
+                x,
+                y,
+                dx,
+                dy,
+                colorStep: 0,
+                prevColor: initialColor,
+                nextColor: initialColor
+            });
+        }
+    }
+
+    private updateTerminalSize(): void {
+        this.width = process.stdout.columns || 80;
+        this.height = process.stdout.rows || 24;
+
+        this.renderer.width = this.width;
+        this.renderer.height = this.height;
+
+        // Reinitialize balls when terminal size changes
+        this.initializeBalls();
+    }
+
+    private getColor(x: number, y: number): string {
+        const r = (x * 5) % 255;
+        const g = (y * 5) % 255;
+        const b = ((x + y) * 3) % 255;
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    private hexToRgb(hex: string): [number, number, number] {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ]
+            : [255, 255, 255];
+    }
+
+    private interpolateColor(c1: string, c2: string, t: number): string {
+        const [r1, g1, b1] = this.hexToRgb(c1);
+        const [r2, g2, b2] = this.hexToRgb(c2);
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+        return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+
+    private getFadedColor(ball: Ball): string {
+        const t = ball.colorStep / this.fadeSteps;
+        const color = this.interpolateColor(ball.prevColor, ball.nextColor, t);
+        ball.colorStep++;
+
+        if (ball.colorStep > this.fadeSteps) {
+            ball.colorStep = 0;
+            ball.prevColor = ball.nextColor;
+            ball.nextColor = this.getColor(ball.x, ball.y);
+        }
+
+        return color;
+    }
+
+    private drawBalls(): void {
+        for (const ball of this.balls) {
+            const color = this.getFadedColor(ball);
+            this.renderer.writeText(ball.y, ball.x, xterm.hex(color).bold('█'), true);
+        }
+
+        this.renderer.render();
+    }
+
+    private updateBallPositions(): void {
+        for (const ball of this.balls) {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Bounce off walls
+            if (ball.x <= 0 || ball.x >= this.width - 1) {
+                ball.dx = -ball.dx;
+                ball.x = Math.max(0, Math.min(this.width - 1, ball.x));
+            }
+
+            if (ball.y <= 0 || ball.y >= this.height - 1) {
+                ball.dy = -ball.dy;
+                ball.y = Math.max(0, Math.min(this.height - 1, ball.y));
+            }
+        }
+    }
+
+    public start(frameRate = 50): void {
+        if (this.intervalId) clearInterval(this.intervalId);
+
+        this.intervalId = setInterval(() => {
+            this.updateBallPositions();
+            this.drawBalls();
+        }, frameRate);
+
+        const rl = createInterface({ input: process.stdin, output: process.stdout });
+        process.stdin?.setRawMode?.(true);
+        process.stdin.on('data', (key) => {
+            if (key.toString() === '\u0003' || key.toString().toLowerCase() === 'q') {
+                this.stop();
+                process.exit(0);
+            }
+        });
+    }
+
+    public stop(): void {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        writeRaw(ANSI.CLEAR_SCREEN);
+        writeRaw(ANSI.SHOW_CURSOR);
+    }
+}
+
+const balls = new BouncingBalls();
+balls.start(15); // smoother animation
+console.log('Press q or Ctrl+C to exit');
+```
+
+## Terminal Bouncing Block Animation
+A mesmerizing terminal-based animation featuring a colored block character (█) that bounces around your terminal window. 
+This program creates a simple yet captivating visual effect using ANSI terminal capabilities.
+
+```ts
+import { ShadowRenderer, writeRaw, ANSI, xterm } from '@remotex-labs/xansi';
+import { createInterface } from 'readline';
+
+class BouncingBall {
+    private x = 0;
+    private y = 0;
+    private dx = 1;
+    private dy = 1;
+    private width = 0;
+    private height = 0;
+    private intervalId: NodeJS.Timeout | null = null;
+
+    private colorStep = 0;
+    private fadeSteps = 30;
+    private prevColor = '#000000';
+    private nextColor = '#ffffff';
+    private renderer: ShadowRenderer;
+
+    constructor() {
+        this.renderer = new ShadowRenderer(this.height, this.width, 0, 0);
+        this.updateTerminalSize();
+
+        process.stdout.on('resize', () => this.updateTerminalSize());
+
+        writeRaw(ANSI.HIDE_CURSOR);
+        writeRaw(ANSI.CLEAR_SCREEN);
+
+        this.resetPosition();
+        this.prevColor = this.getColor(this.x, this.y);
+        this.nextColor = this.prevColor;
+    }
+
+    private updateTerminalSize(): void {
+        this.width = process.stdout.columns || 80;
+        this.height = process.stdout.rows || 24;
+
+        this.renderer.width = this.width;
+        this.renderer.height = this.height;
+
+        if (this.x >= this.width - 4 || this.y >= this.height - 2) {
+            this.resetPosition();
+        }
+    }
+
+    private resetPosition(): void {
+        this.x = Math.floor(this.width / 2);
+        this.y = Math.floor(this.height / 2);
+    }
+
+    private getColor(x: number, y: number): string {
+        const r = (x * 5) % 255;
+        const g = (y * 5) % 255;
+        const b = ((x + y) * 3) % 255;
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    private hexToRgb(hex: string): [number, number, number] {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ]
+            : [255, 255, 255];
+    }
+
+    private interpolateColor(c1: string, c2: string, t: number): string {
+        const [r1, g1, b1] = this.hexToRgb(c1);
+        const [r2, g2, b2] = this.hexToRgb(c2);
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+        return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+
+    private getFadedColor(): string {
+        const t = this.colorStep / this.fadeSteps;
+        const color = this.interpolateColor(this.prevColor, this.nextColor, t);
+        this.colorStep++;
+
+        if (this.colorStep > this.fadeSteps) {
+            this.colorStep = 0;
+            this.prevColor = this.nextColor;
+            this.nextColor = this.getColor(this.x, this.y);
+        }
+
+        return color;
+    }
+
+    private drawBall(): void {
+        const color = this.getFadedColor();
+
+        this.renderer.writeText(this.y, this.x, xterm.hex(color).bold('█'), true);
+        this.renderer.writeText(this.y, this.x + 1, xterm.hex(color).bold('█'), true);
+
+        this.renderer.render();
+    }
+
+    private updateBallPosition(): void {
+        this.x += this.dx;
+        this.y += this.dy;
+
+        if (this.x <= 0 || this.x >= this.width - 3) {
+            this.dx = -this.dx;
+            this.x = Math.max(0, Math.min(this.width - 3, this.x));
+        }
+
+        if (this.y <= 0 || this.y >= this.height - 2) {
+            this.dy = -this.dy;
+            this.y = Math.max(0, Math.min(this.height - 2, this.y));
+        }
+    }
+
+    public start(frameRate = 50): void {
+        if (this.intervalId) clearInterval(this.intervalId);
+
+        this.intervalId = setInterval(() => {
+            this.updateBallPosition();
+            this.drawBall();
+        }, frameRate);
+
+        const rl = createInterface({ input: process.stdin, output: process.stdout });
+        process.stdin?.setRawMode?.(true);
+        process.stdin.on('data', (key) => {
+            if (key.toString() === '\u0003' || key.toString().toLowerCase() === 'q') {
+                this.stop();
+                process.exit(0);
+            }
+        });
+    }
+
+    public stop(): void {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        writeRaw(ANSI.CLEAR_SCREEN);
+        writeRaw(ANSI.SHOW_CURSOR);
+    }
+}
+
+const ball = new BouncingBall();
+ball.start(15); // smoother animation
+console.log('Press q or Ctrl+C to exit');
+```
+
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 
