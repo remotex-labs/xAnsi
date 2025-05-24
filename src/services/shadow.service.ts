@@ -9,6 +9,7 @@ import type { CellInterface, RenderContext } from '@services/interfaces/shadow-s
  */
 
 import { ANSI, writeRaw, moveCursor, stripAnsi } from '@components/ansi.component';
+import { splitWithAnsiContext } from '@services/ast.service';
 
 /**
  * A virtual terminal renderer that manages efficient screen updates
@@ -374,16 +375,14 @@ export class ShadowRenderer {
 
     writeText(row: number, column: number, text: string, clean: boolean = false): void {
         // Validate input
-        if (!Number.isInteger(row) || row < 0 || column >= this.terminalWidth) return;
+        if (row < 0 || column >= this.terminalWidth) return;
+        if(clean) this.contentBuffer[row] = [];
 
-        const line = this.contentBuffer[row] ??= Object.create(null);
-        const content = text.split('\n')[0];
-        const ansiLength = content.length - stripAnsi(content).length;
-        const length = Math.min((this.terminalWidth - column) + ansiLength, content.length);
-
-        if (clean) {
-            for (let i = 0; i < length + column; i++) delete line[i];
-        }
+        text = text.split('\n')[0];
+        const line = this.contentBuffer[row] ??= [];
+        const stripContent = stripAnsi(text);
+        const length = Math.min(this.terminalWidth - column, stripContent.length);
+        const content = splitWithAnsiContext(text);
 
         for (let i = 0; i < length; i++) {
             const col = column + i;
@@ -397,7 +396,8 @@ export class ShadowRenderer {
             }
         }
 
-        line.length = Math.min(this.terminalWidth + ansiLength, column + length);
+        // clean the rest of the line ? `line.length = Math.min(this.terminalWidth, column + length);`
+        line.length = Math.min(Math.max(column + length, this.terminalWidth), this.terminalWidth);
     }
 
     /**

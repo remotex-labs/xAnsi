@@ -93,10 +93,19 @@ export function stripAnsi(str: string): string {
  */
 
 export const ANSI = {
+    /**
+     * Clears from the cursor to the end of the line
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.0.0
+     */
+
     CLEAR_LINE: '\x1B[K',
 
     /**
      * Hides the cursor
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
@@ -104,6 +113,8 @@ export const ANSI = {
 
     /**
      * Shows the cursor
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
@@ -111,13 +122,17 @@ export const ANSI = {
 
     /**
      * Saves the current cursor position
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
     SAVE_CURSOR: '\x1B[s',
 
     /**
-     * Clears the entire screen and moves cursor to home position
+     * Clears the entire screen and moves the cursor to home position (top-left)
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
@@ -125,15 +140,29 @@ export const ANSI = {
 
     /**
      * Restores the cursor to the previously saved position
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
     RESTORE_CURSOR: '\x1B[u',
 
     /**
-     * Clears the screen from the cursor position down and moves cursor to home position
+     * Clears the screen from the cursor position down
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
      * @since 1.0.0
      */
 
-    CLEAR_SCREEN_DOWN: '\x1b[J'
+    CLEAR_SCREEN_DOWN: '\x1b[J',
+
+    /**
+     * Resets the terminal to its initial state (RIS - Reset to Initial State).
+     * Clears screen, scrollback buffer, and most settings.
+     * This is a "hard reset" escape code.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#Reset_(RIS)
+     * @since 1.0.0
+     */
+    RESET_TERMINAL: '\x1bc'
 } as const;
