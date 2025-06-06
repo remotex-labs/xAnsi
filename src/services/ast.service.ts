@@ -24,21 +24,45 @@
 
 const ANSI_RESET_MAP: Record<string, string | null> = {
     // Text styles
-    '1': '22', '3': '23', '4': '24', '5': '25',
-    '7': '27', '8': '28', '9': '29',
+    '1': '22',
+    '3': '23',
+    '4': '24',
+    '5': '25',
+    '7': '27',
+    '8': '28',
+    '9': '29',
 
     // Foreground colors
-    '30': '39', '31': '39', '32': '39', '33': '39',
-    '34': '39', '35': '39', '36': '39', '37': '39',
+    '30': '39',
+    '31': '39',
+    '32': '39',
+    '33': '39',
+    '34': '39',
+    '35': '39',
+    '36': '39',
+    '37': '39',
 
     // Background colors
-    '40': '49', '41': '49', '42': '49', '43': '49',
-    '44': '49', '45': '49', '46': '49', '47': '49',
+    '40': '49',
+    '41': '49',
+    '42': '49',
+    '43': '49',
+    '44': '49',
+    '45': '49',
+    '46': '49',
+    '47': '49',
 
     // Resets
-    '0': null, '22': null, '23': null, '24': null,
-    '25': null, '27': null, '28': null, '29': null,
-    '39': null, '49': null
+    '0': null,
+    '22': null,
+    '23': null,
+    '24': null,
+    '25': null,
+    '27': null,
+    '28': null,
+    '29': null,
+    '39': null,
+    '49': null
 };
 
 /**
@@ -126,7 +150,7 @@ export function processAnsiCode(code: string, index: number, codes: Array<string
 
 export function splitWithAnsiContext(str: string): Array<string> {
     const ansiRegex = /\x1b\[[0-9;]*m/g;
-    const tokens = str.match(new RegExp(`${ansiRegex.source}|.`, 'g')) || [];
+    const tokens = str.match(new RegExp(`${ ansiRegex.source }|.`, 'g')) || [];
 
     const active = new Map<string, string>();
     const result: Array<string> = [];
