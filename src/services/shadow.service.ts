@@ -8,8 +8,8 @@ import type { CellInterface, RenderContextInterface } from '@services/interfaces
  * Imports
  */
 
-import { ANSI, writeRaw, moveCursor, stripAnsi } from '@components/ansi.component';
 import { splitWithAnsiContext } from '@services/ast.service';
+import { ANSI, writeRaw, moveCursor, stripAnsi } from '@components/ansi.component';
 
 /**
  * A virtual terminal renderer that manages efficient screen updates
