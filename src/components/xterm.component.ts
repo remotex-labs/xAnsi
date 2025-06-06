@@ -114,7 +114,6 @@ function wrapWithAnsi(codes: Array<StyleCodeType>, text: string): string {
         return `${ ESC }${ codes[0][0] }${ ESC_END }${ text }${ ESC }${ codes[0][1] }${ ESC_END }`;
     }
 
-    // Pre-allocate arrays rather than using map for better performance
     const endCodes = new Array<string>(codesLength);
     const startCodes = new Array<string>(codesLength);
 
@@ -290,7 +289,6 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
         if (Array.isArray(args[0]) && 'raw' in args[0]) {
             const [ strings, ...values ] = args as [ TemplateStringsArray, ...Array<unknown> ];
 
-            // Optimize string concatenation using a single reduce
             const combined = strings.reduce(
                 (acc, str, i) => acc + str + (i < values.length ? String(values[i] ?? '') : ''),
                 ''
@@ -306,25 +304,25 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
     // Define color method handlers for reuse
     const colorHandlers = {
         // RGB foreground color
-        rgb: (r: number, g: number, b: number) =>
+        rgb: (r: number, g: number, b: number): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('fg', r, g, b) ]),
 
         // RGB background color
-        bgRgb: (r: number, g: number, b: number) =>
+        bgRgb: (r: number, g: number, b: number): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('bg', r, g, b) ]),
 
         // Hex foreground color
-        hex: (hex: string) =>
+        hex: (hex: string): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('fg', ...hexToRgb(hex)) ]),
 
         // Hex background color
-        bgHex: (hex: string) =>
+        bgHex: (hex: string): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('bg', ...hexToRgb(hex)) ])
     };
 
     // Create a proxy to handle property access for chaining
     return <AnsiChainableBuilderType>new Proxy(formatter, {
-        get(target, prop: string | symbol) {
+        get(target, prop: string | symbol): unknown {
             if (typeof prop !== 'string') {
                 throw new Error(`Invalid property: ${ String(prop) }`);
             }
