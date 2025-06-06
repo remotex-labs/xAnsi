@@ -15,7 +15,7 @@ jest.mock('@components/ansi.component', () => {
 
     return {
         ...originalModule,
-        moveCursor: jest.fn((row, col) => `MOCK_CURSOR_MOVE_${row}_${col}`),
+        moveCursor: jest.fn((row, col) => `MOCK_CURSOR_MOVE_${ row }_${ col }`),
         writeRaw: jest.fn()
     };
 });
@@ -168,7 +168,7 @@ describe('ShadowRenderer', () => {
         test('should update scroll position with absolute value', () => {
             // Setup content for scrolling tests - add multiple lines
             for (let i = 0; i < 10; i++) {
-                renderer.writeText(i, 0, `Line ${i + 1}`);
+                renderer.writeText(i, 0, `Line ${ i + 1 }`);
             }
 
             // Initial render to establish the content
