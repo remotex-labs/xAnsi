@@ -14,13 +14,13 @@
  * @example
  * ```ts
  * // Bold style: apply code 1, reset code 22
- * const boldStyle: StyleCode = [1, 22];
+ * const boldStyle: StyleCodeType = [1, 22];
  *
  * // Red foreground: apply code 31, reset code 39
- * const redForeground: StyleCode = [31, 39];
+ * const redForeground: StyleCodeType = [31, 39];
  * ```
  *
  * @since 1.0.0
  */
 
-export type StyleCode = [ code: number | string, reset: number ];
+export type StyleCodeType = [ code: number | string, reset: number ];

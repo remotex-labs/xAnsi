@@ -2,8 +2,8 @@
  * Imports
  */
 
-import { processAnsiCode, splitWithAnsiContext } from '@services/ast.service';
 import { stripAnsi } from '@components/ansi.component';
+import { processAnsiCode, splitWithAnsiContext } from '@services/ast.service';
 
 /**
  * Tests
