@@ -57,7 +57,6 @@ export default defineConfig([
             'yield-star-spacing': [ 'error', 'after' ],
             'rest-spread-spacing': [ 'error', 'never' ],
             'space-before-blocks': [ 'error', 'always' ],
-            'array-bracket-newline': [ 'error', { multiline: true, minItems: 15 }],
             'template-curly-spacing': [ 'error', 'always' ],
             'object-property-newline': [ 'error', { allowAllPropertiesOnSameLine: true }],
 
@@ -76,10 +75,16 @@ export default defineConfig([
                 }
             ],
 
+            'array-bracket-newline': [
+                'error', {
+                    multiline: true, minItems: 15
+                }
+            ],
+
             'object-curly-newline': [
                 'error', {
-                    ObjectExpression: { multiline: true, minProperties: 4, consistent: true },
-                    ObjectPattern: { multiline: true, minProperties: 4, consistent: true }
+                    ObjectExpression: { multiline: true, minProperties: 15, consistent: true },
+                    ObjectPattern: { multiline: true, minProperties: 15, consistent: true }
                 }
             ],
 
@@ -114,7 +119,7 @@ export default defineConfig([
 
             // TypeScript specific rules
             '@typescript-eslint/no-explicit-any': 'warn',
-            '@typescript-eslint/explicit-function-return-type': 'warn',
+            '@typescript-eslint/explicit-function-return-type': 'error',
             '@typescript-eslint/explicit-module-boundary-types': 'warn',
             '@typescript-eslint/consistent-type-imports': [ 'error', { prefer: 'type-imports' }],
 
@@ -125,12 +130,20 @@ export default defineConfig([
                 {
                     'selector': 'interface',
                     'format': [ 'PascalCase' ],
-                    'suffix': [ 'Interface' ]
+                    'suffix': [ 'Interface' ],
+                    'filter': {
+                        'regex': '^x[A-Z].*$',
+                        'match': false
+                    }
                 },
                 {
                     'selector': 'typeAlias',
                     'format': [ 'PascalCase' ],
-                    'suffix': [ 'Type' ]
+                    'suffix': [ 'Type' ],
+                    'filter': {
+                        'regex': '^x[A-Z].*$',
+                        'match': false
+                    }
                 },
                 {
                     'selector': 'enum',
@@ -192,7 +205,8 @@ export default defineConfig([
         files: [ '**/*.spec.ts' ],
         rules: {
             'no-undef': 'off',
-            '@typescript-eslint/no-explicit-any': 'off'
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/explicit-function-return-type': 'off'
         }
     },
     {
