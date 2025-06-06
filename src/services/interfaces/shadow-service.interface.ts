@@ -32,7 +32,7 @@ export interface CellInterface {
  * @since 1.0.0
  */
 
-export interface RenderContext {
+export interface RenderContextInterface {
     /**
      * Whether to force redrawing of all cells regardless of dirty state
      * @since 1.0.0

@@ -2,7 +2,7 @@
  * Import will remove at compile time
  */
 
-import type { CellInterface, RenderContext } from '@services/interfaces/shadow-service.interface';
+import type { CellInterface, RenderContextInterface } from '@services/interfaces/shadow-service.interface';
 
 /**
  * Imports
@@ -432,7 +432,7 @@ export class ShadowRenderer {
         const endRow = Math.min(startRow + this.terminalHeight, this.contentBuffer.length);
 
         if (startRow >= endRow) return;
-        const context: RenderContext = {
+        const context: RenderContextInterface = {
             force,
             output: '',
             viewLine: [],
@@ -487,7 +487,7 @@ export class ShadowRenderer {
      * @since 1.0.0
      */
 
-    private renderLine(context: RenderContext): void {
+    private renderLine(context: RenderContextInterface): void {
         // Track when cursor movement is needed
         let needsCursorMove = true;
 
