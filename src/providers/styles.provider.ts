@@ -2,7 +2,7 @@
  * Import will remove at compile time
  */
 
-import type { StyleCode } from '@providers/interfaces/styles-provider.interface';
+import type { StyleCodeType } from '@providers/interfaces/styles-provider.interface';
 
 /**
  * Collection of ANSI text modifier codes for terminal styling
@@ -21,7 +21,7 @@ import type { StyleCode } from '@providers/interfaces/styles-provider.interface'
  * console.log(`\x1b[${boldCode[0]}mBold Text\x1b[${boldCode[1]}m`);
  * ```
  *
- * @see StyleCode
+ * @see StyleCodeType
  * @since 1.0.0
  */
 
@@ -31,7 +31,7 @@ export const ansiModifiers = {
     reset: [ 0, 0 ],
     hidden: [ 8, 28 ],
     inverse: [ 7, 27 ]
-} satisfies Record<string, StyleCode>;
+} satisfies Record<string, StyleCodeType>;
 
 /**
  * Collection of ANSI foreground color codes for terminal text coloring
@@ -54,7 +54,7 @@ export const ansiModifiers = {
  * console.log(`\x1b[${brightBlueCode[0]}mBright Blue\x1b[${brightBlueCode[1]}m`);
  * ```
  *
- * @see StyleCode
+ * @see StyleCodeType
  * @since 1.0.0
  */
 
@@ -76,7 +76,7 @@ export const ansiForegroundColors = {
     blackBright: [ 90, 39 ],
     yellowBright: [ 93, 39 ],
     magentaBright: [ 95, 39 ]
-} satisfies Record<string, StyleCode>;
+} satisfies Record<string, StyleCodeType>;
 
 /**
  * Collection of ANSI background color codes for terminal text backgrounds
@@ -100,7 +100,7 @@ export const ansiForegroundColors = {
  * console.log(`\x1b[${bgCyanBrightCode[0]}mBright Cyan Background\x1b[${bgCyanBrightCode[1]}m`);
  * ```
  *
- * @see StyleCode
+ * @see StyleCodeType
  * @since 1.0.0
  */
 
@@ -122,4 +122,4 @@ export const ansiBackgroundColors = {
     bgGreenBright: [ 102, 49 ],
     bgYellowBright: [ 103, 49 ],
     bgMagentaBright: [ 105, 49 ]
-} satisfies Record<string, StyleCode>;
+} satisfies Record<string, StyleCodeType>;

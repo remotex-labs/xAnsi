@@ -2,7 +2,7 @@
  * Import will remove at compile time
  */
 
-import type { StyleCode } from '@providers/interfaces/styles-provider.interface';
+import type { StyleCodeType } from '@providers/interfaces/styles-provider.interface';
 import type { AnsiChainableBuilderType } from '@components/interfaces/xterm-component.interface';
 
 /**
@@ -36,11 +36,11 @@ import { ansiBackgroundColors, ansiForegroundColors, ansiModifiers } from '@prov
  * @see ansiModifiers
  * @see ansiForegroundColors
  * @see ansiBackgroundColors
- * @see StyleCode
+ * @see StyleCodeType
  * @since 1.0.0
  */
 
-const styles: Record<string, StyleCode> = {
+const styles: Record<string, StyleCodeType> = {
     ...ansiModifiers,
     ...ansiForegroundColors,
     ...ansiBackgroundColors
@@ -77,7 +77,7 @@ const ESC_END = 'm';
 /**
  * Wraps text with ANSI escape sequences to apply terminal styling
  *
- * @param codes - Array of StyleCode tuples to apply to the text
+ * @param codes - Array of StyleCodeType tuples to apply to the text
  * @param text - The string to be styled with ANSI codes
  * @returns The input text wrapped with appropriate ANSI escape sequences
  *
@@ -100,13 +100,13 @@ const ESC_END = 'm';
  * const boldRedText = wrapWithAnsi([styles.bold, styles.red], "Hello World");
  * ```
  *
- * @see StyleCode
+ * @see StyleCodeType
  * @see ESC
  * @see ESC_END
  * @since 1.0.0
  */
 
-function wrapWithAnsi(codes: Array<StyleCode>, text: string): string {
+function wrapWithAnsi(codes: Array<StyleCodeType>, text: string): string {
     const codesLength = codes.length;
 
     if (codesLength === 0) return text;
@@ -134,7 +134,7 @@ function wrapWithAnsi(codes: Array<StyleCode>, text: string): string {
  * @param r - Red color component (0-255)
  * @param g - Green color component (0-255)
  * @param b - Blue color component (0-255)
- * @returns A StyleCode tuple containing the RGB color code and its reset code
+ * @returns A StyleCodeType tuple containing the RGB color code and its reset code
  *
  * @throws Error - When any of the RGB values are not numbers
  *
@@ -158,13 +158,13 @@ function wrapWithAnsi(codes: Array<StyleCode>, text: string): string {
  * const coloredText = wrapWithAnsi([redFg], "This text is custom red");
  * ```
  *
- * @see StyleCode
+ * @see StyleCodeType
  * @see wrapWithAnsi
  *
  * @since 1.0.0
  */
 
-function rgbCode(type: 'fg' | 'bg', r: number | unknown, g: number | unknown, b: number | unknown): StyleCode {
+function rgbCode(type: 'fg' | 'bg', r: number | unknown, g: number | unknown, b: number | unknown): StyleCodeType {
     if (typeof r !== 'number' || typeof g !== 'number' || typeof b !== 'number') {
         throw new Error(`RGB values must be numbers, received: r=${ typeof r }, g=${ typeof g }, b=${ typeof b }`);
     }
@@ -283,7 +283,7 @@ function hexToRgb(hex: string): [ number, number, number ] {
  * @since 1.0.0
  */
 
-function createXtermChain(codes: Array<StyleCode> = []): AnsiChainableBuilderType {
+function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilderType {
     // The formatter function that applies ANSI codes to text
     const formatter = (...args: Array<unknown>): string => {
         // Handle tagged template literals
