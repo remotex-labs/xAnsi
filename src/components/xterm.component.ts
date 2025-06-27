@@ -163,6 +163,8 @@ function wrapWithAnsi(codes: Array<StyleCodeType>, text: string): string {
  * @since 1.0.0
  */
 
+function rgbCode(type: 'fg', r: number, g: number, b: number): StyleCodeType;
+function rgbCode(type: 'bg', r: number, g: number, b: number): StyleCodeType;
 function rgbCode(type: 'fg' | 'bg', r: number | unknown, g: number | unknown, b: number | unknown): StyleCodeType {
     if (typeof r !== 'number' || typeof g !== 'number' || typeof b !== 'number') {
         throw new Error(`RGB values must be numbers, received: r=${ typeof r }, g=${ typeof g }, b=${ typeof b }`);
@@ -208,9 +210,9 @@ function rgbCode(type: 'fg' | 'bg', r: number | unknown, g: number | unknown, b:
  * @since 1.0.0
  */
 
-function hexToRgb(hex: string): [ number, number, number ] {
+function hexToRgb(hex: `#${ string }` | string): [ number, number, number ] {
     // Remove leading # if present
-    const cleanHex = hex.replace(/^#/, '').toLowerCase();;
+    const cleanHex = hex.replace(/^#/, '').toLowerCase();
 
     // Validate hex format
     if (!/^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(cleanHex)) {
