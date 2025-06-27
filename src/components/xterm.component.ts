@@ -210,7 +210,7 @@ function rgbCode(type: 'fg' | 'bg', r: number | unknown, g: number | unknown, b:
 
 function hexToRgb(hex: string): [ number, number, number ] {
     // Remove leading # if present
-    const cleanHex = hex.replace(/^#/, '');
+    const cleanHex = hex.replace(/^#/, '').toLowerCase();;
 
     // Validate hex format
     if (!/^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(cleanHex)) {
