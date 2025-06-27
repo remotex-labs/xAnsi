@@ -75,7 +75,18 @@ export const ansiForegroundColors = {
     greenBright: [ 92, 39 ],
     blackBright: [ 90, 39 ],
     yellowBright: [ 93, 39 ],
-    magentaBright: [ 95, 39 ]
+    magentaBright: [ 95, 39 ],
+    darkGray: [ '38;5;238', 39 ],
+    lightGray: [ '38;5;252', 39 ],
+    lightCoral: [ '38;5;203', 39 ],
+    oliveGreen: [ '38;5;149', 39 ],
+    deepOrange: [ '38;5;166', 39 ],
+    brightPink: [ '38;5;197', 39 ],
+    lightOrange: [ '38;5;215', 39 ],
+    burntOrange: [ '38;5;208', 39 ],
+    lightYellow: [ '38;5;230', 39 ],
+    canaryYellow: [ '38;5;227', 39 ],
+    lightGoldenrodYellow: [ '38;5;221', 39 ]
 } satisfies Record<string, StyleCodeType>;
 
 /**
