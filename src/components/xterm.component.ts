@@ -123,7 +123,7 @@ function wrapWithAnsi(codes: Array<StyleCodeType>, text: string): string {
         endCodes[codesLength - i - 1] = `${ ESC }${ codes[i][1] }${ ESC_END }`;
     }
 
-    return `${ startCodes.join('') }${ text }${ endCodes.join('') }`;
+    return startCodes.concat(text, endCodes).join('');
 }
 
 /**
