@@ -214,7 +214,7 @@ function hexToRgb(hex: string): [ number, number, number ] {
 
     // Validate hex format
     if (!/^([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(cleanHex)) {
-        throw new Error(`Invalid hex color: ${ hex }`);
+        throw new Error(`Invalid hex color format: "${ hex }". Expected 3 or 6 hex digits.`);
     }
 
     // Parse 3-digit hex
