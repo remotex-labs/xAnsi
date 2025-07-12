@@ -78,6 +78,7 @@ export const ansiForegroundColors = {
     magentaBright: [ 95, 39 ],
     darkGray: [ '38;5;238', 39 ],
     lightGray: [ '38;5;252', 39 ],
+    lightCyan: [ '38;5;81', 39 ],
     lightCoral: [ '38;5;203', 39 ],
     oliveGreen: [ '38;5;149', 39 ],
     deepOrange: [ '38;5;166', 39 ],
