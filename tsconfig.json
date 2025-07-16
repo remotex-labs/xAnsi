@@ -4,8 +4,8 @@
         "target": "ESNext",
         "module": "ESNext",
         "outDir": "dist",
-        "baseUrl": "src",
-        "rootDir": ".",
+        "baseUrl": ".",
+        "rootDir": "src",
         "declaration": true,
         "skipLibCheck": true,
         "importHelpers": true,
@@ -24,13 +24,13 @@
         ],
         "paths": {
             "@services/*": [
-                "services/*"
+                "src/services/*"
             ],
             "@providers/*": [
-                "providers/*"
+                "src/providers/*"
             ],
             "@components/*": [
-                "components/*"
+                "src/components/*"
             ]
         }
     },

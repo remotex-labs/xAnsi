@@ -79,6 +79,6 @@
         "@swc/jest": "^0.2.38",
         "@types/node": "^22.15.30",
         "@types/jest": "^29.5.14",
-        "@remotex-labs/xbuild": "^1.5.8"
+        "@remotex-labs/xbuild": "^1.5.10"
     }
 }
