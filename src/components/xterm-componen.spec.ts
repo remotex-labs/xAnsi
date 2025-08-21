@@ -69,7 +69,36 @@ describe('styles.components', () => {
 
         test('should handle multiple arguments as concatenated string', () => {
             const result = xterm.blue('Hello', 'world', '!');
-            expect(result).toBe('\x1b[34mHelloworld!\x1b[39m');
+            expect(result).toBe('\x1b[34mHello world !\x1b[39m');
         });
+    });
+});
+
+describe('xterm - no color mode', () => {
+    // Backup original NO_COLOR
+    const originalNoColor = globalThis.NO_COLOR;
+
+    beforeEach(() => {
+        // Enable no-color
+        globalThis.NO_COLOR = true;
+    });
+
+    afterEach(() => {
+        // Restore original value
+        (globalThis as any).NO_COLOR = originalNoColor;
+    });
+
+    test('should return plain text when NO_COLOR is true', () => {
+        const result = xterm.red.bgBlue.bold('test');
+        expect(result).toBe('test');
+
+        const rgbResult = xterm.rgb(100, 150, 200)('test');
+        expect(rgbResult).toBe('test');
+
+        const hexResult = xterm.hex('#64a0c8')('test');
+        expect(hexResult).toBe('test');
+
+        const templateResult = xterm.green`Hello ${ 'world' }!`;
+        expect(templateResult).toBe('Hello world!');
     });
 });
