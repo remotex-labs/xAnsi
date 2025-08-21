@@ -81,19 +81,3 @@ renderer.writeText(0, 0, 'Hello Shadow Renderer');
 renderer.render();
 ```
 
-## Compatibility
-- Node.js 20+
-- All modern browsers (via bundlers)
-- TypeScript 4.5+
-
-## Contributing
-Contributions are welcome!\
-Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## License
-This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-- Built with TypeScript
-- Inspired by ANSI and xTerm terminal standards
-
