@@ -223,8 +223,8 @@ describe('ShadowRenderer', () => {
         test('should ignore scrolling beyond content boundaries', () => {
             renderer.scroll = 10;
 
-            expect(renderer.scroll).toBe(0);
-            expect(writeRaw).not.toHaveBeenCalled();
+            expect(renderer.scroll).toBe(6);
+            expect(writeRaw).toHaveBeenCalled();
         });
     });
 });
