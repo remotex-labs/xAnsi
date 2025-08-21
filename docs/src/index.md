@@ -1,25 +1,24 @@
-# xAnsi
+---
+outline: deep
+---
 
-[![npm version](https://img.shields.io/badge/Documentation-orange?logo=typescript&logoColor=f5f5f5)](https://remotex-labs.github.io/xAnsi/)
-[![npm version](https://img.shields.io/npm/v/@remotex-labs/xansi.svg)](https://www.npmjs.com/package/@remotex-labs/xansi)
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Node.js CI](https://github.com/remotex-labs/xAnsi/actions/workflows/node.js.yml/badge.svg)](https://github.com/remotex-labs/xnasi/actions/workflows/node.js.yml)
-
+# Guide
 A lightweight ANSI utility library for styling terminal output.
 xAnsi provides easy-to-use components for working with ANSI escape codes to create colorful and formatted terminal interfaces.
 
 ## Features
 
 - **ANSI Component**  
-  Utility constants and functions for terminal control, including cursor movement, screen clearing, hiding/showing the cursor, and raw terminal output through the `writeRaw` function.
+  Utility constants and functions for terminal control, including cursor movement, screen clearing,
+- hiding/showing the cursor, and raw terminal output through the `writeRaw` function.
 
 - **xTerm Component**  
-  Advanced terminal styling with chainable API for colors, backgrounds, text modifiers, RGB, and hexadecimal color codes. Supports template literals and type-safe style combinations.
-
-> Environment variable flag that indicates if color output should be disabled. @see https://no-color.org/ - The NO_COLOR standard specification
+  Advanced terminal styling with chainable API for colors, backgrounds, text modifiers, RGB,
+- and hexadecimal color codes. Supports template literals and type-safe style combinations.
 
 - **Shadow Renderer**  
-  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state. Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
+  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state.
+- Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
 
 ## Installation
 
@@ -82,9 +81,6 @@ renderer.writeText(0, 0, 'Hello Shadow Renderer');
 renderer.render();
 ```
 
-## Documentation
-For complete API documentation, examples, and guides, visit: [xAnsi Documentation](https://remotex-labs.github.io/xAnsi/)
-
 ## Compatibility
 - Node.js 20+
 - All modern browsers (via bundlers)
@@ -94,9 +90,10 @@ For complete API documentation, examples, and guides, visit: [xAnsi Documentatio
 Contributions are welcome!\
 Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-
 ## License
 This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 - Built with TypeScript
+- Inspired by ANSI and xTerm terminal standards
+
