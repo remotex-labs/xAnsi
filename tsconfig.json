@@ -35,7 +35,8 @@
         }
     },
     "include": [
-        "src/index.ts"
+        "src/index.ts",
+        "includes/global.d.ts"
     ],
     "exclude": [
         "dist",
