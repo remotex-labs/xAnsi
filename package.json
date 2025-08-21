@@ -8,7 +8,7 @@
     "version": "1.0.0-local",
     "license": "Mozilla Public License Version 2.0",
     "description": "A lightweight ANSI utility library for styling terminal output",
-    "homepage": "https://github.com/remotex-labs/xAnsi.git",
+    "homepage": "https://remotex-labs.github.io/xAnsi",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/remotex-labs/xAnsi.git"
