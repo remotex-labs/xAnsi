@@ -290,8 +290,10 @@ export class ShadowRenderer {
             ? this.scrollPosition + position  // Relative position
             : position;                       // Absolute position
 
-        if (targetPosition >= this.contentBuffer.length) return;
-        this.scrollPosition = targetPosition;
+        const guardedPosition = Math.min(Math.max(targetPosition, 0), this.contentBuffer.length - 1);
+
+        if (guardedPosition === this.scrollPosition) return;
+        this.scrollPosition = guardedPosition;
         this.render();
     }
 
