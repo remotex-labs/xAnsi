@@ -11,6 +11,13 @@ import type { AnsiChainableBuilderType } from '@components/interfaces/xterm-comp
 
 import { ansiBackgroundColors, ansiForegroundColors, ansiModifiers } from '@providers/styles.provider';
 
+
+/**
+ * Exports
+ */
+
+export type * from '@components/interfaces/xterm-component.interface';
+
 /**
  * Unified collection of all ANSI style codes for efficient lookup
  *
