@@ -107,6 +107,7 @@ const ESC_END = 'm';
  */
 
 function wrapWithAnsi(codes: Array<StyleCodeType>, text: string): string {
+    if (globalThis.NO_COLOR) return text;
     const codesLength = codes.length;
 
     if (codesLength === 0) return text;
@@ -285,9 +286,7 @@ function hexToRgb(hex: `#${ string }` | string): [ number, number, number ] {
  */
 
 function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilderType {
-    // The formatter function that applies ANSI codes to text
     const formatter = (...args: Array<unknown>): string => {
-        // Handle tagged template literals
         if (Array.isArray(args[0]) && 'raw' in args[0]) {
             const [ strings, ...values ] = args as [ TemplateStringsArray, ...Array<unknown> ];
 
@@ -300,7 +299,7 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
         }
 
         // Handle regular arguments
-        return wrapWithAnsi(codes, args.join(''));
+        return wrapWithAnsi(codes, args.join(' '));
     };
 
     // Define color method handlers for reuse
@@ -309,15 +308,12 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
         rgb: (r: number, g: number, b: number): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('fg', r, g, b) ]),
 
-        // RGB background color
         bgRgb: (r: number, g: number, b: number): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('bg', r, g, b) ]),
 
-        // Hex foreground color
         hex: (hex: string): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('fg', ...hexToRgb(hex)) ]),
 
-        // Hex background color
         bgHex: (hex: string): AnsiChainableBuilderType =>
             createXtermChain([ ...codes, rgbCode('bg', ...hexToRgb(hex)) ])
     };
