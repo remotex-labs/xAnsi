@@ -18,7 +18,7 @@ export default defineVersionedConfig({
     title: 'xAnsi',
     base: '/xAnsi/',
     srcDir: 'src',
-    description: 'A versatile JavaScript and TypeScript toolchain build system',
+    description: 'A lightweight ANSI utility library for styling terminal output',
     head: [
         [ 'link', { rel: 'icon', type: 'image/png', href: '/xAnsi/xansi.png' }],
         [ 'meta', { name: 'theme-color', content: '#ff7e17' }],
