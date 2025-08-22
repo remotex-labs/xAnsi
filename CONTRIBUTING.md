@@ -85,7 +85,6 @@ For thorough testing, you can also run:
 npm run test:coverage
 ```
 
-
 ## Documentation
 
 When adding new features, please update the relevant documentation:
@@ -113,16 +112,6 @@ We follow [Semantic Versioning](https://semver.org/):
 - MAJOR version for incompatible API changes
 - MINOR version for backwards-compatible functionality
 - PATCH version for backwards-compatible bug fixes
-
-## Release Process
-
-Releases are managed by the core maintainers. The general process is:
-
-1. Finalize and merge all changes for the release
-2. Update version in package.json
-3. Update CHANGELOG.md
-4. Create a tagged release
-5. Publish to npm
 
 ## Questions?
 
