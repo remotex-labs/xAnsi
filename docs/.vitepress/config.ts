@@ -54,7 +54,7 @@ export default defineVersionedConfig({
 
         socialLinks: [
             { icon: 'github', link: 'https://github.com/remotex-labs/xAnsi' },
-            { icon: 'npm', link: 'https://www.npmjs.com/package/@remotex-labs/xAnsi' }
+            { icon: 'npm', link: 'https://www.npmjs.com/package/@remotex-labs/xansi' }
         ],
 
         docFooter: {
