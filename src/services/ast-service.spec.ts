@@ -312,3 +312,73 @@ describe('splitWithAnsiContext', () => {
     });
 
 });
+
+describe('processAnsiCode - extended color handling', () => {
+    let active: Map<string, string>;
+
+    beforeEach(() => {
+        active = new Map<string, string>();
+    });
+
+    test('handles 256-color foreground', () => {
+        const codes = [ '38', '5', '208' ]; // Orange foreground
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(2); // Should skip processed parts
+        expect(active.has('38;5;208')).toBe(true);
+        expect(active.get('38;5;208')).toBe('39');
+    });
+
+    test('handles 256-color background', () => {
+        const codes = [ '48', '5', '34' ]; // Blue background
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(2); // Should skip processed parts
+        expect(active.has('48;5;34')).toBe(true);
+        expect(active.get('48;5;34')).toBe('49');
+    });
+
+    test('handles truecolor foreground', () => {
+        const codes = [ '38', '2', '123', '45', '67' ]; // RGB foreground
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(4); // Skips the RGB components
+        expect(active.has('38;2;123;45;67')).toBe(true);
+        expect(active.get('38;2;123;45;67')).toBe('39');
+    });
+
+    test('handles truecolor background', () => {
+        const codes = [ '48', '2', '0', '128', '255' ]; // RGB background
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(4);
+        expect(active.has('48;2;0;128;255')).toBe(true);
+        expect(active.get('48;2;0;128;255')).toBe('49');
+    });
+
+    test('does not process incomplete 256-color sequence', () => {
+        const codes = [ '38', '5' ]; // Missing the color value
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(0);
+        expect(active.size).toBe(0);
+    });
+
+    test('does not process incomplete truecolor sequence', () => {
+        const codes = [ '48', '2', '255', '0' ]; // Missing one RGB component
+        const index = processAnsiCode(codes[0], 0, codes, active);
+
+        expect(index).toBe(0);
+        expect(active.size).toBe(0);
+    });
+
+    test('preserves standard reset behavior with extended colors', () => {
+        // Add a 256-color foreground and a bold style
+        processAnsiCode('38', 0, [ '38', '5', '208' ], active);
+        processAnsiCode('1', 0, [ '1' ], active);
+
+        // Full reset
+        processAnsiCode('0', 0, [ '0' ], active);
+        expect(active.size).toBe(0);
+    });
+});
