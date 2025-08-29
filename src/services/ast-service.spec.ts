@@ -382,3 +382,110 @@ describe('processAnsiCode - extended color handling', () => {
         expect(active.size).toBe(0);
     });
 });
+
+describe('processAnsiCode - bright color handling', () => {
+    let active: Map<string, string>;
+
+    beforeEach(() => {
+        active = new Map<string, string>();
+    });
+
+    test('handles bright foreground colors', () => {
+        // Bright Red (91)
+        const brightRedCode = '91';
+        const brightRedIndex = processAnsiCode(brightRedCode, 0, [ brightRedCode ], active);
+
+        expect(brightRedIndex).toBe(0);
+        expect(active.has(brightRedCode)).toBe(true);
+        expect(active.get(brightRedCode)).toBe('39');
+
+        // Bright Green (92)
+        active.clear();
+        const brightGreenCode = '92';
+        const brightGreenIndex = processAnsiCode(brightGreenCode, 0, [ brightGreenCode ], active);
+
+        expect(brightGreenIndex).toBe(0);
+        expect(active.has(brightGreenCode)).toBe(true);
+        expect(active.get(brightGreenCode)).toBe('39');
+
+        // Bright Blue (94)
+        active.clear();
+        const brightBlueCode = '94';
+        const brightBlueIndex = processAnsiCode(brightBlueCode, 0, [ brightBlueCode ], active);
+
+        expect(brightBlueIndex).toBe(0);
+        expect(active.has(brightBlueCode)).toBe(true);
+        expect(active.get(brightBlueCode)).toBe('39');
+    });
+
+    test('handles bright background colors', () => {
+        // Bright Red Background (101)
+        const brightRedBgCode = '101';
+        const brightRedBgIndex = processAnsiCode(brightRedBgCode, 0, [ brightRedBgCode ], active);
+
+        expect(brightRedBgIndex).toBe(0);
+        expect(active.has(brightRedBgCode)).toBe(true);
+        expect(active.get(brightRedBgCode)).toBe('49');
+
+        // Bright Cyan Background (106)
+        active.clear();
+        const brightCyanBgCode = '106';
+        const brightCyanBgIndex = processAnsiCode(brightCyanBgCode, 0, [ brightCyanBgCode ], active);
+
+        expect(brightCyanBgIndex).toBe(0);
+        expect(active.has(brightCyanBgCode)).toBe(true);
+        expect(active.get(brightCyanBgCode)).toBe('49');
+    });
+
+    test('handles mixed bright and standard colors', () => {
+        // Add standard red foreground
+        processAnsiCode('31', 0, [ '31' ], active);
+        // Add bright cyan background
+        processAnsiCode('106', 0, [ '106' ], active);
+
+        expect(active.size).toBe(2);
+        expect(active.get('31')).toBe('39');
+        expect(active.get('106')).toBe('49');
+
+        // Reset foreground color
+        processAnsiCode('39', 0, [ '39' ], active);
+        expect(active.size).toBe(1);
+        expect(active.has('31')).toBe(false);
+        expect(active.has('106')).toBe(true);
+    });
+
+    test('handles bright red color for cross symbol', () => {
+        // This test specifically addresses the issue with the red cross symbol
+        const input = '\u001b[91m✗\u001b[39m'; // Red cross with reset
+        const result = splitWithAnsiContext(input);
+
+        expect(result).toEqual([ '\u001b[91m✗\u001b[39m' ]);
+
+        // Test the processAnsiCode function directly
+        processAnsiCode('91', 0, [ '91' ], active);
+        expect(active.has('91')).toBe(true);
+        expect(active.get('91')).toBe('39');
+    });
+
+    test('handles all bright foreground colors', () => {
+        const brightCodes = [ '90', '91', '92', '93', '94', '95', '96', '97' ];
+
+        brightCodes.forEach(code => {
+            active.clear();
+            processAnsiCode(code, 0, [ code ], active);
+            expect(active.has(code)).toBe(true);
+            expect(active.get(code)).toBe('39');
+        });
+    });
+
+    test('handles all bright background colors', () => {
+        const brightBgCodes = [ '100', '101', '102', '103', '104', '105', '106', '107' ];
+
+        brightBgCodes.forEach(code => {
+            active.clear();
+            processAnsiCode(code, 0, [ code ], active);
+            expect(active.has(code)).toBe(true);
+            expect(active.get(code)).toBe('49');
+        });
+    });
+});
