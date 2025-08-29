@@ -343,6 +343,7 @@ export class ShadowRenderer {
             output += ANSI.CLEAR_LINE;
         }
 
+        output += ANSI.CURSOR_HOME;
         writeRaw(output);
     }
 
@@ -400,6 +401,50 @@ export class ShadowRenderer {
 
         // clean the rest of the line ? `line.length = Math.min(this.terminalWidth, column + length);`
         line.length = Math.min(Math.max(column + length, this.terminalWidth), this.terminalWidth);
+    }
+
+    /**
+     * Writes multi-line text into the content buffer.
+     *
+     * @param row - Starting row position (0-based).
+     * @param column - Starting column position (0-based).
+     * @param text - Text to write, either as a string (may contain newlines) or an array of strings (one per line).
+     * @param clean - Whether to clear existing content before writing.
+     *                Only applies to the first written line; subsequent lines always append.
+     *
+     * @remarks
+     * Unlike {@link writeText}, this method supports writing multiple lines
+     * at once. If the input is a single string, it is split by newline characters.
+     * If an array of strings is provided, each element represents a line.
+     *
+     * This method automatically allocates new rows in the content buffer
+     * as needed, making it suitable for rendering large blocks of text
+     * that can later be scrolled with the renderer.
+     *
+     * @example
+     * Writing a block of text from a single string:
+     * ```ts
+     * renderer.writeBlock(0, 0, "Line 1\nLine 2\nLine 3");
+     * renderer.render();
+     * ```
+     *
+     * @example
+     * Writing a block of text from an array:
+     * ```ts
+     * renderer.writeBlock(2, 4, ["Indented line 1", "Indented line 2"]);
+     * renderer.render();
+     * ```
+     *
+     * @since 1.2.0
+     */
+
+    writeBlock(row: number, column: number, text: string | Array<string>, clean: boolean = false): void {
+        const lines = Array.isArray(text) ? text : text.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const currentRow = row + i;
+            this.writeText(currentRow, column, lines[i], clean);
+        }
     }
 
     /**
@@ -467,6 +512,58 @@ export class ShadowRenderer {
 
         context.output += this.moveCursor(this.viewBuffer.length, this.terminalWidth);
         writeRaw(context.output);
+    }
+
+    /**
+     * Flushes the content buffer directly to the terminal.
+     *
+     * @remarks
+     * This method writes all rows from the {@link contentBuffer} to
+     * `stdout`, appending a newline after each row, and forces the
+     * terminal to scroll as new lines are written.
+     *
+     * After flushing, both {@link viewBuffer} and {@link contentBuffer}
+     * are cleared to prepare for the next render cycle.
+     *
+     * Unlike {@link render}, this method bypasses any diffing or
+     * optimized rendering logic — it always writes the full buffer
+     * to the terminal, which may be slower for large outputs but ensures
+     * a complete reset of the visible state.
+     *
+     * @example
+     * ```ts
+     * // Fill the buffer with some content
+     * renderer.writeBlock(0, 0, "Hello\nWorld");
+     *
+     * // Force flush everything to the terminal
+     * renderer.flushToTerminal();
+     * ```
+     *
+     * @since 1.2.0
+     */
+
+    flushToTerminal(): void {
+        let output = '';
+
+        for (let row = 0; row < this.contentBuffer.length; row++) {
+            const line = this.contentBuffer[row];
+            if (!line) continue;
+
+            for (let col = 0; col < line.length; col++) {
+                const cell = line[col];
+                if (!cell) continue;
+
+                // moveCursor already includes top and left offsets
+                output += this.moveCursor(row + 1, col + 1);
+                output += cell.char;
+            }
+
+            output += '\n';
+        }
+
+        this.viewBuffer = [];
+        this.contentBuffer = [];
+        writeRaw(output);
     }
 
     /**

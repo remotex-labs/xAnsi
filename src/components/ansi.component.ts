@@ -103,6 +103,15 @@ export const ANSI = {
     CLEAR_LINE: '\x1B[K',
 
     /**
+     * Moves the cursor to the "home" position (row 1, column 1).
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.2.0
+     */
+
+    CURSOR_HOME: '\x1b[H',
+
+    /**
      * Hides the cursor
      *
      * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences

@@ -92,7 +92,6 @@ writeRaw(ANSI.RESET_TERMINAL);
 
 Description of Key Constants:
 * CLEAR_LINE – Clears from cursor to end of line.
-* CURSOR_HOME – Moves the cursor to the "home" position (row 1, column 1).
 * HIDE_CURSOR / SHOW_CURSOR – Hide or show the terminal cursor.
 * SAVE_CURSOR / RESTORE_CURSOR – Save and restore the cursor position.
 * CLEAR_SCREEN – Clears the whole screen and moves cursor home.
