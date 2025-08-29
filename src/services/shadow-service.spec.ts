@@ -102,6 +102,62 @@ describe('ShadowRenderer', () => {
         });
     });
 
+    describe('writeBlock', () => {
+        test('should write multiple lines from a single string', () => {
+            const text = 'Line 1\nLine 2\nLine 3';
+            renderer.writeBlock(0, 0, text);
+
+            // Render to trigger writeRaw
+            renderer.render();
+            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+
+            expect(output).toContain('Line 1');
+            expect(output).toContain('Line 2');
+            expect(output).toContain('Line 3');
+        });
+
+        test('should write multiple lines from an array of strings', () => {
+            const lines = [ 'First', 'Second', 'Third' ];
+            renderer.writeBlock(1, 2, lines);
+
+            renderer.render();
+            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+
+            expect(output).toContain('First');
+            expect(output).toContain('Second');
+            expect(output).toContain('Third');
+        });
+
+        test('should only apply clean to the first line', () => {
+            // Fill the first row with something
+            renderer.writeText(0, 0, 'AAAAA');
+            renderer.writeText(1, 0, 'BBBBB');
+
+            renderer.writeBlock(0, 0, [ 'X1', 'Y1' ], true);
+
+            renderer.render();
+            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+
+            expect(output).toContain('X1');
+            expect(output).not.toContain('AAAAA');
+
+            expect(output).toContain('Y1');
+            expect(output).not.toContain('BBBBB');
+        });
+
+        test('should handle writing beyond terminal width by truncating', () => {
+            const longLine = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            renderer.writeBlock(0, 0, [ longLine ]);
+
+            renderer.render();
+            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+
+            // Only first 10 characters should appear (renderer width = 10)
+            expect(output).toContain('ABCDEFGHIJ');
+            expect(output).not.toContain('KLMNOPQRSTUVWXYZ');
+        });
+    });
+
     describe('render', () => {
         test('should only render dirty cells', () => {
             // Initial render
@@ -225,6 +281,48 @@ describe('ShadowRenderer', () => {
 
             expect(renderer.scroll).toBe(6);
             expect(writeRaw).toHaveBeenCalled();
+        });
+    });
+
+    describe('flushToTerminal', () => {
+        test('should write all cells with correct cursor positions and clear buffers', () => {
+            // Arrange: fill some content at different positions
+            renderer.writeText(0, 0, 'A');
+            renderer.writeText(0, 2, 'B');
+            renderer.writeText(1, 1, 'C');
+
+            // Spy on moveCursor
+            const moveCursorSpy = jest.spyOn(renderer as any, 'moveCursor');
+
+            // Act: flush the terminal
+            renderer.flushToTerminal();
+            expect(writeRaw).toHaveBeenCalled();
+
+            // Check moveCursor calls
+            expect(moveCursorSpy).toHaveBeenCalledWith(1, 1); // A at (0,0) with +1 offset
+            expect(moveCursorSpy).toHaveBeenCalledWith(1, 3); // B at (0,2)
+            expect(moveCursorSpy).toHaveBeenCalledWith(2, 2); // C at (1,1)
+
+            // Ensure buffers are cleared
+            expect((renderer as any).contentBuffer).toEqual([]);
+            expect((renderer as any).viewBuffer).toEqual([]);
+        });
+
+        test('should handle sparse lines and skip empty cells', () => {
+            // Arrange: sparse content
+            renderer.writeText(0, 0, 'X');
+            renderer.writeText(0, 4, 'Y'); // gaps between
+
+            // Spy on moveCursor
+            const moveCursorSpy = jest.spyOn(renderer as any, 'moveCursor');
+
+            // Act
+            renderer.flushToTerminal();
+
+            // Assert cursor moves only for existing cells
+            expect(moveCursorSpy).toHaveBeenCalledTimes(2);
+            expect(moveCursorSpy).toHaveBeenCalledWith(1, 1);
+            expect(moveCursorSpy).toHaveBeenCalledWith(1, 5);
         });
     });
 });
