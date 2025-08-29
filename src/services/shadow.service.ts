@@ -343,6 +343,7 @@ export class ShadowRenderer {
             output += ANSI.CLEAR_LINE;
         }
 
+        output += ANSI.CURSOR_HOME;
         writeRaw(output);
     }
 
