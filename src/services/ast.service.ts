@@ -87,30 +87,47 @@ const ANSI_RESET_MAP: Record<string, string | null> = {
  */
 
 export function processAnsiCode(code: string, index: number, codes: Array<string>, active: Map<string, string>): number {
-    // RGB foreground/background: 38;2;r;g;b or 48;2;r;g;b
-    if ((code === '38' || code === '48') && codes[index + 1] === '2') {
+    const next = codes[index + 1];
+    const afterNext = codes[index + 2];
+
+    // For extended color codes (38/48), pre-calculate the reset code
+    const resetCode = (code === '38' || code === '48') ? (code === '38' ? '39' : '49') : null;
+
+    // Handle truecolor: 38;2;r;g;b or 48;2;r;g;b
+    if (resetCode && next === '2') {
         const rgb = codes.slice(index + 2, index + 5);
         if (rgb.length === 3) {
-            const rgbKey = `${ code };2;${ rgb.join(';') }`;
-            const reset = code === '38' ? '39' : '49';
-            active.set(rgbKey, reset);
+            active.set(`${ code };2;${ rgb.join(';') }`, resetCode);
 
-            return index + 4; // Skip the processed RGB parts
+            return index + 4;
         }
     }
 
+    // Handle 256-color: 38;5;n or 48;5;n
+    if (resetCode && next === '5' && afterNext !== undefined) {
+        active.set(`${ code };5;${ afterNext }`, resetCode);
+
+        return index + 2;
+    }
+
+    // Handle reset mappings
     const reset = ANSI_RESET_MAP[code];
-    if (reset === null) {
-        // Full or partial reset
-        if (code === '0') {
-            active.clear();
-        } else {
-            for (const [ k, v ] of active) {
-                if (k === code || v === code) active.delete(k);
+    if (reset !== undefined) {
+        if (reset === null) {
+            if (code === '0') {
+                active.clear(); // Full reset
+            } else {
+                // Remove any matching key or reset
+                for (const [ k, v ] of active) {
+                    if (k === code || v === code) {
+                        active.delete(k);
+                        break;
+                    }
+                }
             }
+        } else {
+            active.set(code, reset);
         }
-    } else if (reset) {
-        active.set(code, reset);
     }
 
     return index;
