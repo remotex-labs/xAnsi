@@ -57,41 +57,6 @@ renderer.render();                             // Display changes
 * `text` – string to display
 * `clean` – optional; clears existing content if true
 
-> [!WARNING]
-> If the `text` parameter contains newline characters (`\n`), `writeText` will only process content up to the first newline. 
-> For multi-line text, use `writeBlock` instead. 
-
-## Writing Blocks of Text
-The `writeBlock` method allows you to write multi-line text in a single operation:
-
-```ts
-import { ShadowRenderer } from '@remotex-labs/xansi';
-const renderer = new ShadowRenderer(10, 80, 0, 0);
-
-// Method 1: Write a multi-line block using a string with newlines const
-menuText = '1. File Operations\n2. Edit Options\n3. View Settings\n4. Exit Application'; 
-renderer.writeBlock(3, 5, menuText);
-
-// Method 2: Write a multi-line block using an array of strings const
-warningLines = [ 'WARNING:', 'Unsaved changes will be lost!' ]; 
-renderer.writeBloc(3, 5, warningLines);
-```
-
-* `row` - Starting row position (0-based)
-* `column` - Starting column position (0-based)
-* `text` - Content to write, which can be either:
-    * A string that will be automatically split at newline characters (`\n`)
-    * An array of strings, where each element represents a line
-* `clean` - Optional; when set to `true`, clears existing content before writing the line
-
-This method automatically allocates new rows in the content buffer as needed, 
-making it suitable for rendering large blocks of text that can be scrolled with the renderer.
-
-::: danger STOP
-This method overrides all existing content in the rows it writes to.
-The new text will replace any content previously written to these rows.
-:::
-
 ## Basic Usage
 
 ```ts
@@ -164,28 +129,6 @@ process.stdout.on('resize', () => {
   // Force redraw after resize
   renderer.render(true);
 });
-```
-
-## Flushing to Terminal
-
-* Sends all rendered content to the terminal output
-* Clears the internal buffer after flushing
-* Does not require a further call to `render()`
-
-> [!CAUTION]
-> This method immediately writes all buffered content to the standard output. 
-> Unlike `render()` which updates the terminal view while maintaining content in the buffer, `flushToTerminal()` outputs the content and then clears the buffer.
-> After calling this method, any previously rendered content will no longer be available in the renderer's buffer.
-
-```ts
-import { ShadowRenderer } from '@remotex-labs/xansi';
-const renderer = new ShadowRenderer(10, 80, 0, 0);
-// Write some content renderer.
-writeText(0, 0, 'Hello World'); 
-renderer.writeBlock(2, 0, 'Line 1\nLine 2\nLine 3');
-
-// Flush all content to the terminal 
-renderer.flushToTerminal();
 ```
 
 ## Content Scrolling
