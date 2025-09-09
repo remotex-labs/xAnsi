@@ -291,17 +291,10 @@ describe('ShadowRenderer', () => {
             renderer.writeText(0, 2, 'B');
             renderer.writeText(1, 1, 'C');
 
-            // Spy on moveCursor
-            const moveCursorSpy = jest.spyOn(renderer as any, 'moveCursor');
-
             // Act: flush the terminal
             renderer.flushToTerminal();
-            expect(writeRaw).toHaveBeenCalled();
-
-            // Check moveCursor calls
-            expect(moveCursorSpy).toHaveBeenCalledWith(1, 1); // A at (0,0) with +1 offset
-            expect(moveCursorSpy).toHaveBeenCalledWith(1, 3); // B at (0,2)
-            expect(moveCursorSpy).toHaveBeenCalledWith(2, 2); // C at (1,1)
+            expect(writeRaw).toHaveBeenCalledWith(expect.stringContaining('\n\x1B[KA B'));
+            expect(writeRaw).toHaveBeenCalledWith(expect.stringContaining('\n\x1B[K C'));
 
             // Ensure buffers are cleared
             expect((renderer as any).contentBuffer).toEqual([]);
@@ -313,16 +306,11 @@ describe('ShadowRenderer', () => {
             renderer.writeText(0, 0, 'X');
             renderer.writeText(0, 4, 'Y'); // gaps between
 
-            // Spy on moveCursor
-            const moveCursorSpy = jest.spyOn(renderer as any, 'moveCursor');
-
             // Act
             renderer.flushToTerminal();
 
             // Assert cursor moves only for existing cells
-            expect(moveCursorSpy).toHaveBeenCalledTimes(2);
-            expect(moveCursorSpy).toHaveBeenCalledWith(1, 1);
-            expect(moveCursorSpy).toHaveBeenCalledWith(1, 5);
+            expect(writeRaw).toHaveBeenCalledWith(expect.stringContaining('\n\x1B[KX   Y'));
         });
     });
 });
