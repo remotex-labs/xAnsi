@@ -298,13 +298,17 @@ export class ShadowRenderer {
     }
 
     /**
-     * Clears the renderer by removing all content from the screen and resetting internal buffers
+     * Clears all content from the renderer and resets its internal state.
      *
-     * @returns This method doesn't return a value
+     * @remarks
+     * This method removes all entries from both the `viewBuffer` and `contentBuffer`,
+     * effectively resetting the renderer to its initial empty state.
+     *
+     * @returns void — This method does not produce a return value.
      *
      * @example
      * ```ts
-     * // Reset the renderer state completely
+     * // Completely reset the renderer's buffers
      * renderer.clear();
      * ```
      *
@@ -312,7 +316,6 @@ export class ShadowRenderer {
      */
 
     clear(): void {
-        this.clearScreen();
         this.viewBuffer = [];
         this.contentBuffer = [];
     }
