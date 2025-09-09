@@ -64,6 +64,6 @@ export default defineVersionedConfig({
         }
     },
     versioning: {
-        latestVersion: 'v1.2.x'
+        latestVersion: 'v1.3.x'
     }
 }, join(__dirname, '../src', 'versions')) as UserConfig;

@@ -252,11 +252,8 @@ function showModal(title, content) {
     writeRaw(ANSI.HIDE_CURSOR);
 
     try {
-        // Clear previous buffer content
+        // Clear previous content
         renderer.clear();
-
-        // Clear screen
-        renderer.clearScreen();
         const totalWidth = 40;
         const labelWithPadding = ` ${ title } `;
         const lineWidth = totalWidth - 2;
