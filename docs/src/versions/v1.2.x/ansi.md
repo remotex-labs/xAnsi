@@ -98,4 +98,3 @@ Description of Key Constants:
 * CLEAR_SCREEN – Clears the whole screen and moves cursor home.
 * CLEAR_SCREEN_DOWN – Clears from cursor to the bottom of the screen.
 * RESET_TERMINAL – Hard reset of terminal (clears screen, scrollback, settings).
-* CURSOR_LINE_START – Moves the cursor to the beginning of the current line (column 1).

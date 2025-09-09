@@ -298,13 +298,17 @@ export class ShadowRenderer {
     }
 
     /**
-     * Clears the renderer by removing all content from the screen and resetting internal buffers
+     * Clears all content from the renderer and resets its internal state.
      *
-     * @returns This method doesn't return a value
+     * @remarks
+     * This method removes all entries from both the `viewBuffer` and `contentBuffer`,
+     * effectively resetting the renderer to its initial empty state.
+     *
+     * @returns void — This method does not produce a return value.
      *
      * @example
      * ```ts
-     * // Reset the renderer state completely
+     * // Completely reset the renderer's buffers
      * renderer.clear();
      * ```
      *
@@ -312,7 +316,6 @@ export class ShadowRenderer {
      */
 
     clear(): void {
-        this.clearScreen();
         this.viewBuffer = [];
         this.contentBuffer = [];
     }
@@ -515,27 +518,31 @@ export class ShadowRenderer {
     }
 
     /**
-     * Flushes the content buffer directly to the terminal.
+     * Flushes the current content buffer directly to the terminal.
      *
      * @remarks
-     * This method writes all rows from the {@link contentBuffer} to
-     * `stdout`, appending a newline after each row, and forces the
-     * terminal to scroll as new lines are written.
+     * This method writes all rows from {@link contentBuffer} to `stdout`,
+     * appending a newline after each row. It also clears each line with
+     * {@link ANSI.CLEAR_LINE} before writing, ensuring no stale characters
+     * remain on screen.
      *
-     * After flushing, both {@link viewBuffer} and {@link contentBuffer}
-     * are cleared to prepare for the next render cycle.
+     * Once flushing is complete, both {@link viewBuffer} and {@link contentBuffer}
+     * are reset to empty arrays, preparing the renderer for the next cycle.
      *
-     * Unlike {@link render}, this method bypasses any diffing or
-     * optimized rendering logic — it always writes the full buffer
-     * to the terminal, which may be slower for large outputs but ensures
-     * a complete reset of the visible state.
+     * Unlike {@link render}, this method bypasses diffing and incremental
+     * optimizations. It always emits the full buffer to the terminal, which
+     * guarantees a complete reset of the visible state but may be less
+     * efficient for large outputs.
+     *
+     * @returns void — This method does not produce a return value.
      *
      * @example
      * ```ts
-     * // Fill the buffer with some content
+     * // Write a block of text to the buffer
      * renderer.writeBlock(0, 0, "Hello\nWorld");
+     * renderer.clearScreen();
      *
-     * // Force flush everything to the terminal
+     * // Forcefully flush everything to the terminal
      * renderer.flushToTerminal();
      * ```
      *
@@ -543,26 +550,22 @@ export class ShadowRenderer {
      */
 
     flushToTerminal(): void {
-        let output = '';
+        let output = '\n';
 
         for (let row = 0; row < this.contentBuffer.length; row++) {
             const line = this.contentBuffer[row];
             if (!line) continue;
 
+            output += ANSI.CLEAR_LINE;
             for (let col = 0; col < line.length; col++) {
                 const cell = line[col];
-                if (!cell) continue;
-
-                // moveCursor already includes top and left offsets
-                output += this.moveCursor(row + 1, col + 1);
-                output += cell.char;
+                output += cell?.char ?? ' ';
             }
 
             output += '\n';
         }
 
-        this.viewBuffer = [];
-        this.contentBuffer = [];
+        this.clear();
         writeRaw(output);
     }
 

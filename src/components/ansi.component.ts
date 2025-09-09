@@ -173,5 +173,19 @@ export const ANSI = {
      * @see https://en.wikipedia.org/wiki/ANSI_escape_code#Reset_(RIS)
      * @since 1.0.0
      */
-    RESET_TERMINAL: '\x1bc'
+    RESET_TERMINAL: '\x1bc',
+
+    /**
+     * Moves the cursor to the beginning of the current line (column 1).
+     *
+     * @remarks
+     * Unlike `\r` (carriage return), this is an ANSI escape sequence that
+     * explicitly positions the cursor at column 1, regardless of terminal state.
+     * It does not affect the row — only the horizontal position is changed.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.3.0
+     */
+
+    CURSOR_LINE_START: '\x1b[1G'
 } as const;
