@@ -25,6 +25,7 @@
 const ANSI_RESET_MAP: Record<string, string | null> = {
     // Text styles
     '1': '22',
+    '2': '22',
     '3': '23',
     '4': '24',
     '5': '25',
