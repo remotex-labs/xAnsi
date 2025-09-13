@@ -139,15 +139,6 @@ export const ANSI = {
     SAVE_CURSOR: '\x1B[s',
 
     /**
-     * Clears the entire screen and moves the cursor to home position (top-left)
-     *
-     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
-     * @since 1.0.0
-     */
-
-    CLEAR_SCREEN: '\x1b[2J\x1b[H',
-
-    /**
      * Restores the cursor to the previously saved position
      *
      * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
@@ -155,15 +146,6 @@ export const ANSI = {
      */
 
     RESTORE_CURSOR: '\x1B[u',
-
-    /**
-     * Clears the screen from the cursor position down
-     *
-     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
-     * @since 1.0.0
-     */
-
-    CLEAR_SCREEN_DOWN: '\x1b[J',
 
     /**
      * Resets the terminal to its initial state (RIS - Reset to Initial State).
@@ -175,6 +157,53 @@ export const ANSI = {
      */
 
     RESET_TERMINAL: '\x1bc',
+
+    /**
+     * Clears the screen from the cursor position to the end of the screen.
+     *
+     * Equivalent to `ESC[J` or `ESC[0J`.
+     * Leaves the scrollback buffer intact.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.0.0
+     */
+
+    CLEAR_SCREEN_DOWN: '\x1b[0J',
+
+    /**
+     * Clears the screen from the cursor position to the beginning of the screen.
+     *
+     * Equivalent to `ESC[1J`.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.0.0
+     */
+
+    CLEAR_SCREEN_UP: '\x1b[1J',
+
+    /**
+     * Clears the entire screen and moves the cursor to the home position (top-left).
+     *
+     * Equivalent to `ESC[2JESC[H`.
+     * Does not clear the scrollback buffer.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.0.0
+     */
+
+    CLEAR_SCREEN: '\x1b[2J\x1b[H',
+
+    /**
+     * Clears the entire screen and deletes all lines saved in the scrollback buffer.
+     *
+     * Equivalent to `ESC[3JESC[H`.
+     * Supported in xterm and many modern terminal emulators.
+     *
+     * @see https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences
+     * @since 1.0.0
+     */
+
+    CLEAR_SCREEN_FULL: '\x1b[3J\x1b[H',
 
     /**
      * Moves the cursor to the beginning of the current line (column 1).
