@@ -173,6 +173,7 @@ export const ANSI = {
      * @see https://en.wikipedia.org/wiki/ANSI_escape_code#Reset_(RIS)
      * @since 1.0.0
      */
+
     RESET_TERMINAL: '\x1bc',
 
     /**
