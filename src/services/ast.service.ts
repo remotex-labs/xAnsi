@@ -25,6 +25,7 @@
 const ANSI_RESET_MAP: Record<string, string | null> = {
     // Text styles
     '1': '22',
+    '2': '22',
     '3': '23',
     '4': '24',
     '5': '25',
@@ -41,6 +42,7 @@ const ANSI_RESET_MAP: Record<string, string | null> = {
     '35': '39',
     '36': '39',
     '37': '39',
+    '38': '39',
     '90': '39',
     '91': '39',
     '92': '39',
@@ -59,6 +61,7 @@ const ANSI_RESET_MAP: Record<string, string | null> = {
     '45': '49',
     '46': '49',
     '47': '49',
+    '48': '49',
     '100': '49',
     '101': '49',
     '102': '49',
@@ -82,126 +85,99 @@ const ANSI_RESET_MAP: Record<string, string | null> = {
 };
 
 /**
- * Processes ANSI escape codes and updates the active styles map
+ * Splits a string containing ANSI escape codes into individual characters,
+ * preserving all active styling for each character.
  *
- * @param code - The ANSI code to process
- * @param index - Current index in the codes array
- * @param codes - Array of all ANSI codes in the sequence
- * @param active - Map of active styles to be updated
- * @returns The new index position after processing
+ * @param str - The ANSI-styled string to process.
  *
- * @throws InvalidCodeError - When an unsupported ANSI code is encountered
- *
- * @example
- * ```ts
- * const active = new Map<string, string>();
- * const codes = ['1', '31'];
- * const newIndex = processAnsiCode('1', 0, codes, active);
- * ```
- *
- * @since 1.0.0
- */
-
-export function processAnsiCode(code: string, index: number, codes: Array<string>, active: Map<string, string>): number {
-    const next = codes[index + 1];
-    const afterNext = codes[index + 2];
-
-    // For extended color codes (38/48), pre-calculate the reset code
-    const resetCode = (code === '38' || code === '48') ? (code === '38' ? '39' : '49') : null;
-
-    // Handle truecolor: 38;2;r;g;b or 48;2;r;g;b
-    if (resetCode && next === '2') {
-        const rgb = codes.slice(index + 2, index + 5);
-        if (rgb.length === 3) {
-            active.set(`${ code };2;${ rgb.join(';') }`, resetCode);
-
-            return index + 4;
-        }
-    }
-
-    // Handle 256-color: 38;5;n or 48;5;n
-    if (resetCode && next === '5' && afterNext !== undefined) {
-        active.set(`${ code };5;${ afterNext }`, resetCode);
-
-        return index + 2;
-    }
-
-    // Handle reset mappings
-    const reset = ANSI_RESET_MAP[code];
-    if (reset !== undefined) {
-        if (reset === null) {
-            if (code === '0') {
-                active.clear(); // Full reset
-            } else {
-                // Remove any matching key or reset
-                for (const [ k, v ] of active) {
-                    if (k === code || v === code) {
-                        active.delete(k);
-                        break;
-                    }
-                }
-            }
-        } else {
-            active.set(code, reset);
-        }
-    }
-
-    return index;
-}
-
-/**
- * Splits an ANSI-styled string into individual characters, each wrapped with current active ANSI codes and their resets
- *
- * @param str - The ANSI-styled string to process
- * @returns An array of strings where each element is a character with its complete ANSI styling context
- *
- * @throws Error - If the ANSI sequence contains invalid codes
+ * @returns An array of strings, where each element represents a single character
+ *          wrapped with its full active ANSI codes and corresponding reset codes.
  *
  * @remarks
- * This function maintains the styling context for each character by tracking active ANSI codes
- * as it processes the input string. It reconstructs each visible character with its full styling
- * information, ensuring that each character in the returned array has the proper ANSI codes
- * prefixed and the corresponding reset codes suffixed.
+ * This function handles ANSI escape sequences in a string and ensures that each
+ * visible character retains the correct styling context.
  *
- * The function handles:
- * - Plain text characters
- * - ANSI escape sequences for styling
- * - Multiple active styles simultaneously
+ * Behavior:
+ * - Handles plain text characters and surrogate pairs correctly.
+ * - Maintains multiple simultaneous ANSI styles.
+ * - Resets styles when encountering `\x1b[0m`.
+ * - Supports one-time ANSI codes that affect only the next character.
  *
- * @example
+ * Implementation details:
+ * - Tracks active ANSI codes in `prefix` and `suffix` arrays.
+ * - Builds `currPrefixStr` and `currSuffixStr` for efficient string reconstruction.
+ * - Uses `Array.from` to handle Unicode surrogate pairs.
+ *
+ * Example usage:
  * ```ts
- * // Split a string with bold and colored text
  * const input = "\x1b[1m\x1b[31mBold Red\x1b[0m";
  * const chars = splitWithAnsiContext(input);
- * // Result: Each character will be individually styled with bold and red
- * // e.g., ["\x1b[1m\x1b[31mB\x1b[22m\x1b[39m", "\x1b[1m\x1b[31mo\x1b[22m\x1b[39m", ...]
+ * // chars[0] = "'\x1B[1;31mB\x1B[22;39m"
+ * // chars[1] = "\x1B[1;31mo\x1B[22;39m"
  * ```
  *
- * @see processAnsiCode - For details on how individual ANSI codes are processed
  * @since 1.0.0
  */
 
 export function splitWithAnsiContext(str: string): Array<string> {
-    const ansiRegex = /\x1b\[[0-9;]*m/g;
-    const tokens = str.match(new RegExp(`${ ansiRegex.source }|.`, 'g')) || [];
+    if (!str) return [ '' ];
 
-    const active = new Map<string, string>();
     const result: Array<string> = [];
+    const prefix: Array<string> = [];
+    const suffix: Array<string> = [];
 
-    for (const token of tokens) {
-        if (!token.startsWith('\x1b[')) {
-            // Wrap visible character with current styles and resets
-            const prefix = [ ...active.keys() ].map(k => `\x1b[${ k }m`).join('');
-            const suffix = [ ...new Set(active.values()) ].map(k => `\x1b[${ k }m`).join('');
-            result.push(`${ prefix }${ token }${ suffix }`);
-            continue;
+    let oneTimePrefix = '';
+    let currPrefixStr = '';
+    let currSuffixStr = '';
+
+    const ansiRe = /\x1b\[[0-9;]*m/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = ansiRe.exec(str))) {
+        const chunk = str.slice(lastIndex, match.index);
+
+        // Use Array.from to handle surrogate pairs correctly
+        for (const char of Array.from(chunk)) {
+            result.push(oneTimePrefix + currPrefixStr + char + currSuffixStr);
+            oneTimePrefix = '';
         }
 
-        // Handle ANSI escape codes
-        const codes = token.slice(2, -1).split(';');
-        for (let i = 0; i < codes.length; i++) {
-            i = processAnsiCode(codes[i], i, codes, active);
+        const token = match[0];
+        const codeSeq = token.slice(2, -1);
+        const semi = codeSeq.indexOf(';');
+        const code = semi < 0 ? codeSeq : codeSeq.slice(0, semi);
+        const resetCode = ANSI_RESET_MAP[code];
+
+        if(code === '0') {
+            prefix.length = 0;
+            suffix.length = 0;
+            currPrefixStr = '';
+            currSuffixStr = '';
+            oneTimePrefix += token;
+        } else {
+            if (resetCode && prefix[prefix.length - 1] !== codeSeq) {
+                prefix.push(codeSeq);
+                suffix.push(resetCode);
+                currPrefixStr = `\x1b[${ prefix.join(';') }m`;
+                currSuffixStr = `\x1b[${ suffix.join(';') }m`;
+            } else if (suffix[suffix.length - 1] === codeSeq) {
+                prefix.pop();
+                suffix.pop();
+                currPrefixStr = prefix.length ? `\x1b[${ prefix.join(';') }m` : '';
+                currSuffixStr = suffix.length ? `\x1b[${ suffix.join(';') }m` : '';
+            } else {
+                oneTimePrefix += token;
+            }
         }
+
+        lastIndex = ansiRe.lastIndex;
+    }
+
+    const remaining = str.slice(lastIndex);
+    for (const char of Array.from(remaining)) {
+        result.push(oneTimePrefix + currPrefixStr + char + currSuffixStr);
+        oneTimePrefix = '';
     }
 
     return result;

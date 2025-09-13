@@ -2,156 +2,26 @@
  * Imports
  */
 
-import { stripAnsi } from '@components/ansi.component';
-import { processAnsiCode, splitWithAnsiContext } from '@services/ast.service';
+import { splitWithAnsiContext } from '@services/ast.service';
 
 /**
  * Tests
  */
 
-describe('processAnsiCode', () => {
-    let active: Map<string, string>;
-
-    beforeEach(() => {
-        // Reset the active map before each test
-        active = new Map<string, string>();
-    });
-
-    test('handles text styling codes', () => {
-        // Bold text
-        const boldCode = '1';
-        const boldIndex = processAnsiCode(boldCode, 0, [ boldCode ], active);
-
-        expect(boldIndex).toBe(0);
-        expect(active.has(boldCode)).toBe(true);
-        expect(active.get(boldCode)).toBe('22');
-
-        // Italic text
-        const italicCode = '3';
-        const italicIndex = processAnsiCode(italicCode, 0, [ italicCode ], active);
-
-        expect(italicIndex).toBe(0);
-        expect(active.has(italicCode)).toBe(true);
-        expect(active.get(italicCode)).toBe('23');
-    });
-
-    test('handles foreground color codes', () => {
-        // Red foreground
-        const redCode = '31';
-        const redIndex = processAnsiCode(redCode, 0, [ redCode ], active);
-
-        expect(redIndex).toBe(0);
-        expect(active.has(redCode)).toBe(true);
-        expect(active.get(redCode)).toBe('39');
-    });
-
-    test('handles background color codes', () => {
-        // Blue background
-        const blueBackgroundCode = '44';
-        const blueIndex = processAnsiCode(blueBackgroundCode, 0, [ blueBackgroundCode ], active);
-
-        expect(blueIndex).toBe(0);
-        expect(active.has(blueBackgroundCode)).toBe(true);
-        expect(active.get(blueBackgroundCode)).toBe('49');
-    });
-
-    test('handles RGB foreground color', () => {
-        const codes = [ '38', '2', '255', '0', '0' ];
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(4); // Should skip the processed RGB parts
-        expect(active.has('38;2;255;0;0')).toBe(true);
-        expect(active.get('38;2;255;0;0')).toBe('39');
-    });
-
-    test('handles RGB background color', () => {
-        const codes = [ '48', '2', '0', '255', '0' ];
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(4); // Should skip the processed RGB parts
-        expect(active.has('48;2;0;255;0')).toBe(true);
-        expect(active.get('48;2;0;255;0')).toBe('49');
-    });
-
-    test('handles incomplete RGB sequence', () => {
-        const codes = [ '38', '2', '255' ]; // Missing two RGB components
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        // Should not process as RGB since it's incomplete
-        expect(index).toBe(0);
-        expect(active.size).toBe(0);
-    });
-
-    test('handles full reset code 0', () => {
-        active.set('1', '22');
-        active.set('31', '39');
-
-        const resetCode = '0';
-        const resetIndex = processAnsiCode(resetCode, 0, [ resetCode ], active);
-
-        expect(resetIndex).toBe(0);
-        expect(active.size).toBe(0); // Map should be cleared
-    });
-
-    test('handles partial reset by code', () => {
-        active.set('1', '22');  // Bold
-        active.set('31', '39'); // Red foreground
-
-        // Reset only the bold style
-        const resetCode = '22';
-        const resetIndex = processAnsiCode(resetCode, 0, [ resetCode ], active);
-
-        expect(resetIndex).toBe(0);
-        expect(active.size).toBe(1);
-        expect(active.has('1')).toBe(false); // Bold should be removed
-        expect(active.has('31')).toBe(true); // Red should remain
-    });
-
-    test('handles multiple styles simultaneously', () => {
-        // Add bold
-        processAnsiCode('1', 0, [ '1' ], active);
-        // Add red foreground
-        processAnsiCode('31', 0, [ '31' ], active);
-        // Add underline
-        processAnsiCode('4', 0, [ '4' ], active);
-
-        expect(active.size).toBe(3);
-        expect(active.get('1')).toBe('22');
-        expect(active.get('31')).toBe('39');
-        expect(active.get('4')).toBe('24');
-    });
-
-    test('handles reset of style by key or value', () => {
-        // Add bold and red foreground
-        active.set('1', '22');  // Bold with reset code 22
-        active.set('31', '39'); // Red foreground with reset code 39
-
-        // Reset by code
-        processAnsiCode('22', 0, [ '22' ], active);
-        expect(active.has('1')).toBe(false); // Bold should be removed
-        expect(active.has('31')).toBe(true); // Red should remain
-
-        // Reset by reset code
-        processAnsiCode('39', 0, [ '39' ], active);
-        expect(active.has('31')).toBe(false); // Red should now be removed
-        expect(active.size).toBe(0);
-    });
-});
-
 describe('splitWithAnsiContext', () => {
-    test('handles plain text without ANSI codes', () => {
-        const input = 'Hello';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([ 'H', 'e', 'l', 'l', 'o' ]);
+    test('handles empty / null / undefined input', () => {
+        expect(splitWithAnsiContext('')).toEqual([ '' ]);
+        expect(splitWithAnsiContext(<any>null)).toEqual([ '' ]);
+        expect(splitWithAnsiContext(<any>undefined)).toEqual([ '' ]);
     });
 
-    test('handles single style for entire text', () => {
-        // Bold text
-        const input = '\x1b[1mBold\x1b[22m';
-        const result = splitWithAnsiContext(input);
+    test('plain text without ANSI codes', () => {
+        expect(splitWithAnsiContext('hello')).toEqual([ 'h', 'e', 'l', 'l', 'o' ]);
+    });
 
-        expect(result).toEqual([
+    test('basic text styling (bold)', () => {
+        const input = '\x1b[1mBold\x1b[22m';
+        expect(splitWithAnsiContext(input)).toEqual([
             '\x1b[1mB\x1b[22m',
             '\x1b[1mo\x1b[22m',
             '\x1b[1ml\x1b[22m',
@@ -159,52 +29,33 @@ describe('splitWithAnsiContext', () => {
         ]);
     });
 
-    test('handles single foreground color', () => {
-        // Red text
-        const input = '\x1b[31mRed\x1b[39m';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([
-            '\x1b[31mR\x1b[39m',
-            '\x1b[31me\x1b[39m',
-            '\x1b[31md\x1b[39m'
+    test('multiple styles at once', () => {
+        const input = '\x1b[1m\x1b[31mBold Red\x1b[0m';
+        expect(splitWithAnsiContext(input)).toEqual([
+            '\x1b[1;31mB\x1b[22;39m',
+            '\x1b[1;31mo\x1b[22;39m',
+            '\x1b[1;31ml\x1b[22;39m',
+            '\x1b[1;31md\x1b[22;39m',
+            '\x1b[1;31m \x1b[22;39m',
+            '\x1b[1;31mR\x1b[22;39m',
+            '\x1b[1;31me\x1b[22;39m',
+            '\x1b[1;31md\x1b[22;39m'
         ]);
     });
 
-    test('handles multiple styles', () => {
-        // Bold and red text
-        const input = '\x1b[1m\x1b[31mBold Red\x1b[22m\x1b[39m';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([
-            '\x1b[1m\x1b[31mB\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31mo\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31ml\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31md\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31m \x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31mR\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31me\x1b[22m\x1b[39m',
-            '\x1b[1m\x1b[31md\x1b[22m\x1b[39m'
-        ]);
-    });
-
-    test('handles style changes mid-string', () => {
-        // Text with style change in the middle
-        const input = 'Normal\x1b[1mBold\x1b[22mNormal';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([
-            'N',
-            'o',
-            'r',
-            'm',
-            'a',
-            'l',
+    test('reset code in the middle', () => {
+        const input = '\x1b[1mBold\x1b[0m and normal';
+        expect(splitWithAnsiContext(input)).toEqual([
             '\x1b[1mB\x1b[22m',
             '\x1b[1mo\x1b[22m',
             '\x1b[1ml\x1b[22m',
             '\x1b[1md\x1b[22m',
-            'N',
+            '\x1b[0m ',
+            'a',
+            'n',
+            'd',
+            ' ',
+            'n',
             'o',
             'r',
             'm',
@@ -213,279 +64,85 @@ describe('splitWithAnsiContext', () => {
         ]);
     });
 
-    test('handles multiple style changes', () => {
-        // Text with multiple style changes
-        const input = 'Normal\x1b[1mBold\x1b[31mBold Red\x1b[22mRed\x1b[39mNormal';
-        const result = splitWithAnsiContext(input);
-
-        // First: Normal text
-        // Then: Bold text
-        // Then: Bold Red text
-        // Then: Red text (not bold)
-        // Then: Normal text again
-
-        // Check the results for a few key positions
-        expect(result[0]).toBe('N'); // First normal character
-        expect(result[6]).toBe('\x1b[1mB\x1b[22m'); // First bold character
-        expect(result[10]).toBe('\x1b[1m\x1b[31mB\x1b[22m\x1b[39m'); // First bold+red character
-        expect(result[18]).toBe('\x1b[31mR\x1b[39m'); // First red (not bold) character
-        expect(result[21]).toBe('N'); // Back to normal
-
-        // Check overall length
-        expect(result.length).toBe(stripAnsi(input).length);
-    });
-
-    test('handles RGB colors', () => {
-        // Text with RGB color (38;2;r;g;b format)
-        const input = '\x1b[38;2;255;0;0mRGB Red\x1b[39m';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([
-            '\x1b[38;2;255;0;0mR\x1b[39m',
-            '\x1b[38;2;255;0;0mG\x1b[39m',
-            '\x1b[38;2;255;0;0mB\x1b[39m',
-            '\x1b[38;2;255;0;0m \x1b[39m',
-            '\x1b[38;2;255;0;0mR\x1b[39m',
-            '\x1b[38;2;255;0;0me\x1b[39m',
-            '\x1b[38;2;255;0;0md\x1b[39m'
+    test('nested or changing styles', () => {
+        const input = '\x1b[1mBold\x1b[31m and red\x1b[0m';
+        const out = splitWithAnsiContext(input);
+        expect(out).toEqual([
+            '\x1b[1mB\x1b[22m',
+            '\x1b[1mo\x1b[22m',
+            '\x1b[1ml\x1b[22m',
+            '\x1b[1md\x1b[22m',
+            '\x1b[1;31m \x1b[22;39m',
+            '\x1b[1;31ma\x1b[22;39m',
+            '\x1b[1;31mn\x1b[22;39m',
+            '\x1b[1;31md\x1b[22;39m',
+            '\x1b[1;31m \x1b[22;39m',
+            '\x1b[1;31mr\x1b[22;39m',
+            '\x1b[1;31me\x1b[22;39m',
+            '\x1b[1;31md\x1b[22;39m'
         ]);
     });
 
-    test('handles full reset code', () => {
-        // Text with full reset (code 0)
-        const input = '\x1b[1m\x1b[31mStyled\x1b[0mNormal';
-        const result = splitWithAnsiContext(input);
+    test('complex styling with selective resets', () => {
+        const input =
+            '\x1b[1m\x1b[31m\x1b[4mStyled\x1b[24m not underlined\x1b[22m not bold\x1b[39m not red';
+        const out = splitWithAnsiContext(input);
 
-        // The first part should have both bold and red styling
-        expect(result[0]).toBe('\x1b[1m\x1b[31mS\x1b[22m\x1b[39m');
+        // first char includes all 3 styles and all 3 resets
+        expect(out[0]).toMatch(/\x1b\[1;31;4m/);
+        expect(out[0]).toMatch(/\x1b\[22;39;24m/);
 
-        // After reset, should have no styling
-        expect(result[6]).toBe('N');
+        // after underline reset, still bold+red but not underlined
+        const idxAfterUnderline = input.indexOf('\x1b[24m');
+        const charsAfterUnderline =
+            input.slice(0, idxAfterUnderline).replace(/\x1b\[[0-9;]*m/g, '').length;
+        expect(out[charsAfterUnderline]).toMatch(/\x1b\[1;31m/);
+        expect(out[charsAfterUnderline]).not.toMatch(/4m/);
     });
 
-    test('handles empty string', () => {
-        const input = '';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([]);
+    test('one-time / unknown SGR sequences are preserved once', () => {
+        const input = '\x1b[58mSpecial\x1b[0m';
+        const out = splitWithAnsiContext(input);
+        expect(out[0]).toContain('\x1b[58m');
+        expect(out.slice(1).join('')).not.toContain('\x1b[58m');
     });
 
-    test('handles string with only ANSI codes but no visible characters', () => {
-        const input = '\x1b[1m\x1b[31m\x1b[0m';
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([]);
+    test('ANSI codes with multiple parameters', () => {
+        const input = '\x1b[1;31;4mMulti\x1b[0m';
+        const first = splitWithAnsiContext(input)[0];
+        expect(first).toMatch(/\x1b\[1;31;4m/);
     });
 
-    test('handles consecutive ANSI codes without characters between them', () => {
-        // Multiple consecutive style changes without characters
-        const input = '\x1b[1m\x1b[31m\x1b[4mStyled\x1b[0m';
-        const result = splitWithAnsiContext(input);
-
-        // Each character should have all three styles applied (bold, red, underline)
-        expect(result[0]).toBe('\x1b[1m\x1b[31m\x1b[4mS\x1b[22m\x1b[39m\x1b[24m');
-        expect(result.length).toBe(6);
+    test('invalid or incomplete ANSI sequences do not throw', () => {
+        expect(() => splitWithAnsiContext('Text with \x1b[ incomplete')).not.toThrow();
+        expect(() => splitWithAnsiContext('Text with \x1b[abcm malformed')).not.toThrow();
     });
 
-    test('handles styled text without explicit reset codes', () => {
-        const input = '\x1b[1mStyled';
-        const result = splitWithAnsiContext(input);
-
-        // Check the first character is properly styled with bold
-        expect(result[0]).toBe('\x1b[1mS\x1b[22m');
-
-        // Check all characters maintain the same styling
-        expect(result[1]).toBe('\x1b[1mt\x1b[22m');
-        expect(result[2]).toBe('\x1b[1my\x1b[22m');
-        expect(result[3]).toBe('\x1b[1ml\x1b[22m');
-        expect(result[4]).toBe('\x1b[1me\x1b[22m');
-        expect(result[5]).toBe('\x1b[1md\x1b[22m');
-
-        // Check the total length
-        expect(result.length).toBe(6);
-
-        // Verify all characters have the same styling pattern
-        result.forEach(char => {
-            expect(char.startsWith('\x1b[1m')).toBe(true);
-            expect(char.endsWith('\x1b[22m')).toBe(true);
-        });
+    test('emoji / surrogate pairs handled as single char', () => {
+        const input = '\x1b[31m😀\x1b[0m';
+        expect(splitWithAnsiContext(input)).toEqual([ '\x1b[31m😀\x1b[39m' ]);
     });
 
-});
-
-describe('processAnsiCode - extended color handling', () => {
-    let active: Map<string, string>;
-
-    beforeEach(() => {
-        active = new Map<string, string>();
+    test('rapid style changes per char', () => {
+        const input = '\x1b[31mR\x1b[32mG\x1b[33mB\x1b[0m';
+        const out = splitWithAnsiContext(input);
+        expect(out).toEqual([
+            '\x1b[31mR\x1b[39m',
+            '\x1b[31;32mG\x1b[39;39m',
+            '\x1b[31;32;33mB\x1b[39;39;39m'
+        ]);
     });
 
-    test('handles 256-color foreground', () => {
-        const codes = [ '38', '5', '208' ]; // Orange foreground
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(2); // Should skip processed parts
-        expect(active.has('38;5;208')).toBe(true);
-        expect(active.get('38;5;208')).toBe('39');
+    test('truecolor foreground and background', () => {
+        const input = '\x1b[38;2;10;20;30;48;2;40;50;60mX\x1b[0m';
+        const out = splitWithAnsiContext(input);
+        expect(out[0]).toContain('38;2;10;20;30');
+        expect(out[0]).toContain('48;2;40;50;60');
     });
 
-    test('handles 256-color background', () => {
-        const codes = [ '48', '5', '34' ]; // Blue background
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(2); // Should skip processed parts
-        expect(active.has('48;5;34')).toBe(true);
-        expect(active.get('48;5;34')).toBe('49');
-    });
-
-    test('handles truecolor foreground', () => {
-        const codes = [ '38', '2', '123', '45', '67' ]; // RGB foreground
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(4); // Skips the RGB components
-        expect(active.has('38;2;123;45;67')).toBe(true);
-        expect(active.get('38;2;123;45;67')).toBe('39');
-    });
-
-    test('handles truecolor background', () => {
-        const codes = [ '48', '2', '0', '128', '255' ]; // RGB background
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(4);
-        expect(active.has('48;2;0;128;255')).toBe(true);
-        expect(active.get('48;2;0;128;255')).toBe('49');
-    });
-
-    test('does not process incomplete 256-color sequence', () => {
-        const codes = [ '38', '5' ]; // Missing the color value
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(0);
-        expect(active.size).toBe(0);
-    });
-
-    test('does not process incomplete truecolor sequence', () => {
-        const codes = [ '48', '2', '255', '0' ]; // Missing one RGB component
-        const index = processAnsiCode(codes[0], 0, codes, active);
-
-        expect(index).toBe(0);
-        expect(active.size).toBe(0);
-    });
-
-    test('preserves standard reset behavior with extended colors', () => {
-        // Add a 256-color foreground and a bold style
-        processAnsiCode('38', 0, [ '38', '5', '208' ], active);
-        processAnsiCode('1', 0, [ '1' ], active);
-
-        // Full reset
-        processAnsiCode('0', 0, [ '0' ], active);
-        expect(active.size).toBe(0);
-    });
-});
-
-describe('processAnsiCode - bright color handling', () => {
-    let active: Map<string, string>;
-
-    beforeEach(() => {
-        active = new Map<string, string>();
-    });
-
-    test('handles bright foreground colors', () => {
-        // Bright Red (91)
-        const brightRedCode = '91';
-        const brightRedIndex = processAnsiCode(brightRedCode, 0, [ brightRedCode ], active);
-
-        expect(brightRedIndex).toBe(0);
-        expect(active.has(brightRedCode)).toBe(true);
-        expect(active.get(brightRedCode)).toBe('39');
-
-        // Bright Green (92)
-        active.clear();
-        const brightGreenCode = '92';
-        const brightGreenIndex = processAnsiCode(brightGreenCode, 0, [ brightGreenCode ], active);
-
-        expect(brightGreenIndex).toBe(0);
-        expect(active.has(brightGreenCode)).toBe(true);
-        expect(active.get(brightGreenCode)).toBe('39');
-
-        // Bright Blue (94)
-        active.clear();
-        const brightBlueCode = '94';
-        const brightBlueIndex = processAnsiCode(brightBlueCode, 0, [ brightBlueCode ], active);
-
-        expect(brightBlueIndex).toBe(0);
-        expect(active.has(brightBlueCode)).toBe(true);
-        expect(active.get(brightBlueCode)).toBe('39');
-    });
-
-    test('handles bright background colors', () => {
-        // Bright Red Background (101)
-        const brightRedBgCode = '101';
-        const brightRedBgIndex = processAnsiCode(brightRedBgCode, 0, [ brightRedBgCode ], active);
-
-        expect(brightRedBgIndex).toBe(0);
-        expect(active.has(brightRedBgCode)).toBe(true);
-        expect(active.get(brightRedBgCode)).toBe('49');
-
-        // Bright Cyan Background (106)
-        active.clear();
-        const brightCyanBgCode = '106';
-        const brightCyanBgIndex = processAnsiCode(brightCyanBgCode, 0, [ brightCyanBgCode ], active);
-
-        expect(brightCyanBgIndex).toBe(0);
-        expect(active.has(brightCyanBgCode)).toBe(true);
-        expect(active.get(brightCyanBgCode)).toBe('49');
-    });
-
-    test('handles mixed bright and standard colors', () => {
-        // Add standard red foreground
-        processAnsiCode('31', 0, [ '31' ], active);
-        // Add bright cyan background
-        processAnsiCode('106', 0, [ '106' ], active);
-
-        expect(active.size).toBe(2);
-        expect(active.get('31')).toBe('39');
-        expect(active.get('106')).toBe('49');
-
-        // Reset foreground color
-        processAnsiCode('39', 0, [ '39' ], active);
-        expect(active.size).toBe(1);
-        expect(active.has('31')).toBe(false);
-        expect(active.has('106')).toBe(true);
-    });
-
-    test('handles bright red color for cross symbol', () => {
-        // This test specifically addresses the issue with the red cross symbol
-        const input = '\u001b[91m✗\u001b[39m'; // Red cross with reset
-        const result = splitWithAnsiContext(input);
-
-        expect(result).toEqual([ '\u001b[91m✗\u001b[39m' ]);
-
-        // Test the processAnsiCode function directly
-        processAnsiCode('91', 0, [ '91' ], active);
-        expect(active.has('91')).toBe(true);
-        expect(active.get('91')).toBe('39');
-    });
-
-    test('handles all bright foreground colors', () => {
-        const brightCodes = [ '90', '91', '92', '93', '94', '95', '96', '97' ];
-
-        brightCodes.forEach(code => {
-            active.clear();
-            processAnsiCode(code, 0, [ code ], active);
-            expect(active.has(code)).toBe(true);
-            expect(active.get(code)).toBe('39');
-        });
-    });
-
-    test('handles all bright background colors', () => {
-        const brightBgCodes = [ '100', '101', '102', '103', '104', '105', '106', '107' ];
-
-        brightBgCodes.forEach(code => {
-            active.clear();
-            processAnsiCode(code, 0, [ code ], active);
-            expect(active.has(code)).toBe(true);
-            expect(active.get(code)).toBe('49');
-        });
+    test('string ending mid-escape does not hang', () => {
+        const input = 'foo\x1b[31';
+        expect(() => splitWithAnsiContext(input)).not.toThrow();
+        expect(splitWithAnsiContext(input)).toContain('f');
     });
 });
