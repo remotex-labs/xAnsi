@@ -4,6 +4,7 @@
 [![npm version](https://img.shields.io/npm/v/@remotex-labs/xansi.svg)](https://www.npmjs.com/package/@remotex-labs/xansi)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 [![Node.js CI](https://github.com/remotex-labs/xAnsi/actions/workflows/node.js.yml/badge.svg)](https://github.com/remotex-labs/xnasi/actions/workflows/node.js.yml)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/remotex-labs/xAnsi)
 
 A lightweight ANSI utility library for styling terminal output.
 xAnsi provides easy-to-use components for working with ANSI escape codes to create colorful and formatted terminal interfaces.
