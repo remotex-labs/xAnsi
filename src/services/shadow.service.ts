@@ -387,10 +387,9 @@ export class ShadowRenderer {
         text = text.split('\n')[0];
         const line = this.contentBuffer[row] ??= [];
         const stripContent = stripAnsi(text);
-        const length = Math.min(this.terminalWidth - column, stripContent.length);
         const content = splitWithAnsiContext(text);
 
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < stripContent.length; i++) {
             const col = column + i;
             const char = content[i];
             if (!line[col]) line[col] = { char: '', dirty: true };
@@ -401,9 +400,6 @@ export class ShadowRenderer {
                 line[col].dirty = true;
             }
         }
-
-        // clean the rest of the line ? `line.length = Math.min(this.terminalWidth, column + length);`
-        line.length = Math.min(Math.max(column + length, this.terminalWidth), this.terminalWidth);
     }
 
     /**
@@ -592,9 +588,10 @@ export class ShadowRenderer {
     private renderLine(context: RenderContextInterface): void {
         // Track when cursor movement is needed
         let needsCursorMove = true;
+        const length = Math.min(this.terminalWidth, context.contentLine.length);
 
         // Process each cell in the row
-        for (let col = 0; col < context.contentLine.length; col++) {
+        for (let col = 0; col < length; col++) {
             const cell = context.contentLine[col];
 
             if (cell && !cell.dirty && cell.char === context.viewLine[col] && !context.force) {
