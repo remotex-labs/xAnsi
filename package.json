@@ -84,6 +84,6 @@
         "@types/node": "^24.6.0",
         "@types/jest": "^30.0.0",
         "@viteplus/versions": "^2.0.2",
-        "@remotex-labs/xbuild": "^1.6.0"
+        "@remotex-labs/xbuild": "^2.1.6"
     }
 }
