@@ -1,35 +1,29 @@
 /**
+ * Import will remove at compile time
+ */
+
+import type { MockState } from '@remotex-labs/xjet';
+
+/**
  * Imports
  */
 
 import { ShadowRenderer } from '@services/shadow.service';
-import { ANSI, writeRaw } from '@components/ansi.component';
-
-/**
- * Mock dependencies
- */
-
-jest.mock('@components/ansi.component', () => {
-    // Get the original module to re-export its functions
-    const originalModule = jest.requireActual('@components/ansi.component');
-
-    return {
-        ...originalModule,
-        moveCursor: jest.fn((row, col) => `MOCK_CURSOR_MOVE_${ row }_${ col }`),
-        writeRaw: jest.fn()
-    };
-});
+import { ANSI, writeRaw, moveCursor } from '@components/ansi.component';
 
 /**
  * Tests
  */
 
 describe('ShadowRenderer', () => {
+    let writeRawMock: MockState;
     let renderer: ShadowRenderer;
 
     beforeEach(() => {
-        jest.clearAllMocks();
-        // Create a renderer positioned at row 2, col 3 with a 10x5 viewport
+        xJet.clearAllMocks();
+        xJet.mock(moveCursor).mockImplementation((row, col) => `MOCK_CURSOR_MOVE_${ row }_${ col }`);
+        writeRawMock = xJet.mock(writeRaw).mockImplementation((text) => `MOCK_WRITE_RAW_${ text }`);
+
         renderer = new ShadowRenderer(5, 10, 2, 3);
     });
 
@@ -63,27 +57,22 @@ describe('ShadowRenderer', () => {
 
             // The writeRaw should be called with a string containing the text
             expect(writeRaw).toHaveBeenCalled();
-            const writeRawArg = (writeRaw as jest.Mock).mock.calls[0][0];
-            expect(writeRawArg).toContain('Hello');
+            expect(writeRaw).toHaveBeenCalledWith(expect.stringContaining('Hello'));
         });
 
         test('should truncate text that exceeds terminal width', () => {
-            // Write text longer than the terminal width (10)
             renderer.writeText(0, 0, 'This is a very long text');
             renderer.render();
 
-            // The full text shouldn't be in the output
-            const writeRawArg = (writeRaw as jest.Mock).mock.calls[0][0];
-            // Only 'This is a' should be visible (10 characters)
-            expect(writeRawArg).toContain('This is a ');
-            expect(writeRawArg).not.toContain('very long text');
+            expect(writeRaw).toHaveBeenCalledWith(expect.stringContaining('This is a '));
+            expect(writeRaw).not.toHaveBeenCalledWith(expect.stringContaining('very long text'));
         });
 
         test('should only process the first line of multi-line text', () => {
             renderer.writeText(0, 0, 'Line 1\nLine 2');
             renderer.render();
 
-            const writeRawArg = (writeRaw as jest.Mock).mock.calls[0][0];
+            const writeRawArg = writeRawMock.mock.calls[0][0];
             expect(writeRawArg).toContain('Line 1');
             expect(writeRawArg).not.toContain('Line 2');
         });
@@ -95,7 +84,7 @@ describe('ShadowRenderer', () => {
             renderer.writeText(0, 3, 'World', true);
             renderer.render();
 
-            const writeRawArg = (writeRaw as jest.Mock).mock.calls[0][0];
+            const writeRawArg = writeRawMock.mock.calls[0][0];
             // Should have removed 'Hello' and only have 'World'
             expect(writeRawArg).toContain('World');
             expect(writeRawArg).not.toContain('Hello');
@@ -109,7 +98,7 @@ describe('ShadowRenderer', () => {
 
             // Render to trigger writeRaw
             renderer.render();
-            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+            const output = writeRawMock.mock.calls[0][0];
 
             expect(output).toContain('Line 1');
             expect(output).toContain('Line 2');
@@ -121,7 +110,7 @@ describe('ShadowRenderer', () => {
             renderer.writeBlock(1, 2, lines);
 
             renderer.render();
-            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+            const output = writeRawMock.mock.calls[0][0];
 
             expect(output).toContain('First');
             expect(output).toContain('Second');
@@ -136,7 +125,7 @@ describe('ShadowRenderer', () => {
             renderer.writeBlock(0, 0, [ 'X1', 'Y1' ], true);
 
             renderer.render();
-            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+            const output = writeRawMock.mock.calls[0][0];
 
             expect(output).toContain('X1');
             expect(output).not.toContain('AAAAA');
@@ -150,7 +139,7 @@ describe('ShadowRenderer', () => {
             renderer.writeBlock(0, 0, [ longLine ]);
 
             renderer.render();
-            const output = (writeRaw as jest.Mock).mock.calls[0][0];
+            const output = writeRawMock.mock.calls[0][0];
 
             // Only first 10 characters should appear (renderer width = 10)
             expect(output).toContain('ABCDEFGHIJ');
@@ -164,8 +153,6 @@ describe('ShadowRenderer', () => {
             renderer.writeText(0, 0, 'Hello');
             renderer.render();
 
-            jest.clearAllMocks();
-
             // Render again without changes
             renderer.render();
 
@@ -177,13 +164,12 @@ describe('ShadowRenderer', () => {
             // Initial render
             renderer.writeText(0, 0, 'Hello');
             renderer.render();
-            jest.clearAllMocks();
 
             // Force render
             renderer.render(true);
 
             // All cells should be re-rendered
-            const writeRawArg = (writeRaw as jest.Mock).mock.calls[0][0];
+            const writeRawArg = writeRawMock.mock.calls[0][0];
             expect(writeRawArg).toContain('Hello');
         });
 
@@ -193,9 +179,6 @@ describe('ShadowRenderer', () => {
             renderer.writeText(1, 0, 'Row 2');
             renderer.writeText(2, 0, 'Row 3');
             renderer.render();
-
-            // Reset mocks for next render
-            jest.clearAllMocks();
 
             // Clear content
             renderer.clear();
@@ -218,7 +201,6 @@ describe('ShadowRenderer', () => {
             renderer.writeText(5, 0, 'Line 6');
             renderer.writeText(6, 0, 'Line 7');
             renderer.render();
-            jest.clearAllMocks();
         });
 
         test('should update scroll position with absolute value', () => {
@@ -227,48 +209,25 @@ describe('ShadowRenderer', () => {
                 renderer.writeText(i, 0, `Line ${ i + 1 }`);
             }
 
-            // Initial render to establish the content
             renderer.render();
-
-            // Reset mocks to focus on the scroll operation
-            jest.clearAllMocks();
-
-            // Mock writeRaw to capture its argument
-            (writeRaw as jest.Mock).mockImplementation(() => {
-                // Store the string for assertions
-            });
-
-            // Set the scroll position
             renderer.scroll = 2;
 
-            // Verify scroll position was updated
             expect(renderer.scroll).toBe(2);
-
-            // Verify that writeRaw was called
             expect(writeRaw).toHaveBeenCalled();
 
-            // One approach is to spy on the render method
-            const renderSpy = jest.spyOn(renderer, 'render');
-
-            // Reset mock to test the next scroll operation
-            jest.clearAllMocks();
-
-            // Do another scroll operation
+            const renderSpy = xJet.spyOn(renderer, 'render');
             renderer.scroll = 3;
 
-            // Verify render was called by the scroll setter
             expect(renderSpy).toHaveBeenCalled();
             expect(renderer.scroll).toBe(3);
         });
 
         test('should handle relative scrolling with negative values', () => {
 
-            const renderSpy = jest.spyOn(renderer, 'render');
+            const renderSpy = xJet.spyOn(renderer, 'render');
 
             renderer.scroll = 3;
             expect(renderer.scroll).toBe(3);
-
-            jest.clearAllMocks();
             renderer.scroll = -2;
 
             expect(renderer.scroll).toBe(1);

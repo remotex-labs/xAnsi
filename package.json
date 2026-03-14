@@ -62,14 +62,14 @@
     "scripts": {
         "dev": "xbuild -w",
         "build": "xbuild",
-        "test": "jest",
-        "test:coverage": "jest --coverage",
+        "test": "xjet",
+        "test:coverage": "xjet --coverage",
         "lint": "pnpm run lint:md && pnpm run lint:eslint && pnpm run lint:typescript",
         "lint:md": "markdownlint \"**/*.md\" --ignore \"node_modules/**\"",
         "lint:eslint": "eslint . -c ./eslint.config.mjs",
         "lint:typescript": "xbuild --tc",
         "preci:test": "xbuild",
-        "ci:test": "jest",
+        "ci:test": "xjet",
         "ci:clean": "rm -rf ./dist",
         "ci:build": "npm run build",
         "docs:dev": "vitepress dev docs",
@@ -77,17 +77,15 @@
         "docs:preview": "vitepress preview docs"
     },
     "devDependencies": {
-        "jest": "^30.3.0",
         "eslint": "^10.0.3",
         "vitepress": "^2.0.0-alpha.16",
         "markdownlint-cli": "^0.48.0",
         "typescript-eslint": "^8.57.0",
         "eslint-plugin-tsdoc": "^0.5.2",
         "eslint-plugin-perfectionist": "^5.6.0",
-        "@swc/jest": "^0.2.39",
         "@types/node": "^25.5.0",
-        "@types/jest": "^30.0.0",
         "@viteplus/versions": "^2.0.6",
+        "@remotex-labs/xjet": "^1.5.4",
         "@remotex-labs/xbuild": "^2.2.2"
     }
 }
