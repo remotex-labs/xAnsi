@@ -6,6 +6,7 @@ enabling low-level manipulation of terminal output for styling, cursor movement,
 ## Imports
 
 You can import the ANSI component in two ways:
+
 ```ts
 import { writeRaw, ANSI } from '@remotex-labs/xansi/ansi.component';
 ```
@@ -17,6 +18,7 @@ import { writeRaw, ANSI } from '@remotex-labs/xansi';
 ```
 
 ## Output Functions
+
 `writeRaw`
 
 Writes text or ANSI sequences directly to the terminal.
@@ -37,10 +39,12 @@ Second line`);
 ```
 
 Behavior:
+
 - Uses process.stdout.write in Node.js for efficient output.
 - Falls back to console.log in other environments.
 
 ## Cursor Movement
+
 `moveCursor`
 
 Generates an ANSI escape sequence to move the cursor to a specific position (1-based row/column).
@@ -58,12 +62,14 @@ writeRaw('Line 3 content');
 ```
 
 ::: tip
-The `moveCursor` function generates ANSI sequences to position the cursor at specific coordinates in the terminal. 
+The `moveCursor` function generates ANSI sequences to position the cursor at specific coordinates in the terminal.
 Both row and column use 1-based indexing (1 is the first row/column).
 :::
 
 ## Terminal Control Constants
+
 The `ANSI` object provides common control sequences:
+
 ```ts
 import { ANSI, writeRaw } from '@remotex-labs/xansi';
 
@@ -91,11 +97,12 @@ writeRaw(ANSI.RESET_TERMINAL);
 ```
 
 Description of Key Constants:
-* CLEAR_LINE – Clears from cursor to end of line.
-* CURSOR_HOME – Moves the cursor to the "home" position (row 1, column 1).
-* HIDE_CURSOR / SHOW_CURSOR – Hide or show the terminal cursor.
-* SAVE_CURSOR / RESTORE_CURSOR – Save and restore the cursor position.
-* CLEAR_SCREEN – Clears the whole screen and moves cursor home.
-* CLEAR_SCREEN_DOWN – Clears from cursor to the bottom of the screen.
-* RESET_TERMINAL – Hard reset of terminal (clears screen, scrollback, settings).
-* CURSOR_LINE_START – Moves the cursor to the beginning of the current line (column 1).
+
+- CLEAR_LINE – Clears from cursor to end of line.
+- CURSOR_HOME – Moves the cursor to the "home" position (row 1, column 1).
+- HIDE_CURSOR / SHOW_CURSOR – Hide or show the terminal cursor.
+- SAVE_CURSOR / RESTORE_CURSOR – Save and restore the cursor position.
+- CLEAR_SCREEN – Clears the whole screen and moves cursor home.
+- CLEAR_SCREEN_DOWN – Clears from cursor to the bottom of the screen.
+- RESET_TERMINAL – Hard reset of terminal (clears screen, scrollback, settings).
+- CURSOR_LINE_START – Moves the cursor to the beginning of the current line (column 1).

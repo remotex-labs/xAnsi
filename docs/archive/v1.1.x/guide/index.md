@@ -3,6 +3,7 @@ outline: deep
 ---
 
 # Guide
+
 A lightweight ANSI utility library for styling terminal output.
 xAnsi provides easy-to-use components for working with ANSI escape codes to create colorful and formatted terminal interfaces.
 
@@ -27,6 +28,7 @@ npm install @remotex-labs/xansi
 ```
 
 ## Optimizing Bundle Size
+
 xAnsi supports subpath imports, allowing you to import only the specific components you need:
 
 ```typescript
@@ -39,6 +41,7 @@ import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ## Usage Examples
 
 ### ANSI Component
+
 ```ts
 import { writeRaw, ANSI } from '@remotex-labs/xansi';
 
@@ -53,6 +56,7 @@ writeRaw(ANSI.RESTORE_CURSOR);
 ```
 
 ### xTerm Component
+
 ```ts
 import { xterm } from '@remotex-labs/xansi';
 
@@ -73,6 +77,7 @@ console.log(xterm.cyan`Hello ${name}!`);
 ```
 
 ### Shadow Renderer
+
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 
@@ -80,4 +85,3 @@ const renderer = new ShadowRenderer(10, 40, 0, 0);
 renderer.writeText(0, 0, 'Hello Shadow Renderer');
 renderer.render();
 ```
-

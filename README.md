@@ -17,10 +17,11 @@ xAnsi provides easy-to-use components for working with ANSI escape codes to crea
 - **xTerm Component**  
   Advanced terminal styling with chainable API for colors, backgrounds, text modifiers, RGB, and hexadecimal color codes. Supports template literals and type-safe style combinations.
 
-> Environment variable flag that indicates if color output should be disabled. @see https://no-color.org/ - The NO_COLOR standard specification
+> Environment variable flag that indicates if color output should be disabled. @see <https://no-color.org/> - The NO_COLOR standard specification
 
 - **Shadow Renderer**  
-  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state. Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
+  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state.
+- Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
 
 ## Installation
 
@@ -29,6 +30,7 @@ npm install @remotex-labs/xansi
 ```
 
 ## Optimizing Bundle Size
+
 xAnsi supports subpath imports, allowing you to import only the specific components you need:
 
 ```typescript
@@ -41,6 +43,7 @@ import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ## Usage Examples
 
 ### ANSI Component
+
 ```ts
 import { writeRaw, ANSI } from '@remotex-labs/xansi';
 
@@ -55,6 +58,7 @@ writeRaw(ANSI.RESTORE_CURSOR);
 ```
 
 ### xTerm Component
+
 ```ts
 import { xterm } from '@remotex-labs/xansi';
 
@@ -75,6 +79,7 @@ console.log(xterm.cyan`Hello ${name}!`);
 ```
 
 ### Shadow Renderer
+
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 
@@ -84,20 +89,24 @@ renderer.render();
 ```
 
 ## Documentation
+
 For complete API documentation, examples, and guides, visit: [xAnsi Documentation](https://remotex-labs.github.io/xAnsi/)
 
 ## Compatibility
+
 - Node.js 20+
 - All modern browsers (via bundlers)
 - TypeScript 4.5+
 
 ## Contributing
+
 Contributions are welcome!\
 Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-
 ## License
+
 This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
+
 - Built with TypeScript
