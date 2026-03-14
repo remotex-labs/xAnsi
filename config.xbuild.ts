@@ -37,7 +37,7 @@ export const config: xBuildConfig = {
         esm: {
             esbuild: {
                 format: 'esm',
-                outdir: 'dist/esm',
+                outdir: 'dist/esm'
             }
         },
         cjs: {
