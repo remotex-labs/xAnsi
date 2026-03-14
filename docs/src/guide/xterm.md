@@ -1,14 +1,17 @@
 # xTerm
 
-The `xterm` component provides advanced terminal styling capabilities with a **chainable API** for applying colors, text styles, and backgrounds. It supports standard ANSI colors, RGB, and hexadecimal color codes, and allows combination of multiple styles in a type-safe manner.
+The `xterm` component provides advanced terminal styling capabilities with a **chainable API** for applying colors, text styles, and backgrounds.
+It supports standard ANSI colors, RGB, and hexadecimal color codes, and allows combination of multiple styles in a type-safe manner.
 
 ::: warning :rocket: NO_COLOR
 Environment variable flag that indicates if color output should be disabled.\
-@see https://no-color.org/ - The NO_COLOR standard specification
+@see <https://no-color.org/> - The NO_COLOR standard specification
 :::
 
 ## Imports
+
 You can import the ANSI component in two ways:
+
 ```ts
 import { xterm } from '@remotex-labs/xansi/xterm.component';
 ```
@@ -41,6 +44,7 @@ console.log(xterm.yellow('Hello %s'), name);
 ```
 
 ## RGB and Hex Colors
+
 `xterm` supports 24-bit RGB colors and hexadecimal color codes for foreground and background styling.
 
 ```ts
@@ -59,6 +63,7 @@ console.log(xterm.hex('#ff5733').bold.bgHex('#3498db')('Custom styled text'));
 ## Style Combinations
 
 `xterm` enforces proper style usage via TypeScript:
+
 * Only one foreground color can be applied.
 * Only one background color can be applied.
 * Text modifiers (bold, dim, inverse, etc.) can be combined freely.
@@ -75,6 +80,7 @@ xterm.rgb(100, 150, 200).bgHex('#333').bold('Valid styling');
 ```
 
 ## Template Literal Support
+
 xterm can style strings using tagged template literals:
 
 ```ts
@@ -83,7 +89,9 @@ console.log(xterm.magenta`Hello ${name}, welcome!`);
 ```
 
 ## Chainable API
+
 All styles and colors can be chained:
+
 ```ts
 console.log(
     xterm.bold.underline.rgb(120, 200, 150).bgHex('#333')('Chained styling')

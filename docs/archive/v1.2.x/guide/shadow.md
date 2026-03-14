@@ -1,6 +1,6 @@
 # ShadowRenderer
 
-`ShadowRenderer` is a virtual terminal renderer for building efficient terminal-based UIs. 
+`ShadowRenderer` is a virtual terminal renderer for building efficient terminal-based UIs.
 It manages an internal content buffer and a view buffer to minimize redraws, supports scrolling, viewport resizing, and styled text output.
 
 ## Features
@@ -22,46 +22,50 @@ The Shadow Renderer is optimized for scenarios where:
 The diffing algorithm ensures minimal terminal I/O operations by tracking which cells have changed and only updating those specific positions.
 
 ## Imports
+
 You can import the ANSI component in two ways:
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ```
 
-or 
+or
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 ```
 
 ## Creating a Renderer
+
 ```ts
 // Create a renderer at row 2, column 3 with viewport size 80x24
 const renderer = new ShadowRenderer(24, 80, 2, 3);
 ```
 
-* `terminalHeight` – number of rows in the viewport
-* `terminalWidth` – number of columns in the viewport
-* `topPosition` – top offset within the terminal
-* `leftPosition` – left offset within the terminal
+- `terminalHeight` – number of rows in the viewport
+- `terminalWidth` – number of columns in the viewport
+- `topPosition` – top offset within the terminal
+- `leftPosition` – left offset within the terminal
 
 ## Writing Text
+
 ```ts
 renderer.writeText(0, 0, 'Hello World');       // Top-left corner
 renderer.writeText(5, 10, 'Menu Options', true); // Clear existing content before writing
 renderer.render();                             // Display changes
 ```
 
-* `row` – 0-based row index in viewport
-* `column` – 0-based column index in viewport
-* `text` – string to display
-* `clean` – optional; clears existing content if true
+- `row` – 0-based row index in viewport
+- `column` – 0-based column index in viewport
+- `text` – string to display
+- `clean` – optional; clears existing content if true
 
 > [!WARNING]
-> If the `text` parameter contains newline characters (`\n`), `writeText` will only process content up to the first newline. 
-> For multi-line text, use `writeBlock` instead. 
+> If the `text` parameter contains newline characters (`\n`), `writeText` will only process content up to the first newline.
+> For multi-line text, use `writeBlock` instead.
 
 ## Writing Blocks of Text
+
 The `writeBlock` method allows you to write multi-line text in a single operation:
 
 ```ts
@@ -77,14 +81,14 @@ warningLines = [ 'WARNING:', 'Unsaved changes will be lost!' ];
 renderer.writeBloc(3, 5, warningLines);
 ```
 
-* `row` - Starting row position (0-based)
-* `column` - Starting column position (0-based)
-* `text` - Content to write, which can be either:
-    * A string that will be automatically split at newline characters (`\n`)
-    * An array of strings, where each element represents a line
-* `clean` - Optional; when set to `true`, clears existing content before writing the line
+- `row` - Starting row position (0-based)
+- `column` - Starting column position (0-based)
+- `text` - Content to write, which can be either:
+  - A string that will be automatically split at newline characters (`\n`)
+  - An array of strings, where each element represents a line
+- `clean` - Optional; when set to `true`, clears existing content before writing the line
 
-This method automatically allocates new rows in the content buffer as needed, 
+This method automatically allocates new rows in the content buffer as needed,
 making it suitable for rendering large blocks of text that can be scrolled with the renderer.
 
 ::: danger STOP
@@ -168,12 +172,12 @@ process.stdout.on('resize', () => {
 
 ## Flushing to Terminal
 
-* Sends all rendered content to the terminal output
-* Clears the internal buffer after flushing
-* Does not require a further call to `render()`
+- Sends all rendered content to the terminal output
+- Clears the internal buffer after flushing
+- Does not require a further call to `render()`
 
 > [!CAUTION]
-> This method immediately writes all buffered content to the standard output. 
+> This method immediately writes all buffered content to the standard output.
 > Unlike `render()` which updates the terminal view while maintaining content in the buffer, `flushToTerminal()` outputs the content and then clears the buffer.
 > After calling this method, any previously rendered content will no longer be available in the renderer's buffer.
 
@@ -291,6 +295,7 @@ showModal('Information', 'The operation completed successfully.\nAll files have 
 ```
 
 ## Terminal Bouncing Blocks Animation
+
 This TypeScript program creates a visually engaging terminal
 animation featuring multiple colored blocks (█) that bounce around your terminal window.
 
@@ -467,6 +472,7 @@ console.log('Press q or Ctrl+C to exit');
 ```
 
 ## Terminal Bouncing Block Animation
+
 A mesmerizing terminal-based animation featuring a colored block character (█) that bounces around your terminal window.
 This program creates a simple yet captivating visual effect using ANSI terminal capabilities.
 

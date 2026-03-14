@@ -1,6 +1,6 @@
 # ShadowRenderer
 
-`ShadowRenderer` is a virtual terminal renderer for building efficient terminal-based UIs. 
+`ShadowRenderer` is a virtual terminal renderer for building efficient terminal-based UIs.
 It manages an internal content buffer and a view buffer to minimize redraws, supports scrolling, viewport resizing, and styled text output.
 
 ## Features
@@ -22,40 +22,43 @@ The Shadow Renderer is optimized for scenarios where:
 The diffing algorithm ensures minimal terminal I/O operations by tracking which cells have changed and only updating those specific positions.
 
 ## Imports
+
 You can import the ANSI component in two ways:
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ```
 
-or 
+or
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 ```
 
 ## Creating a Renderer
+
 ```ts
 // Create a renderer at row 2, column 3 with viewport size 80x24
 const renderer = new ShadowRenderer(24, 80, 2, 3);
 ```
 
-* `terminalHeight` – number of rows in the viewport
-* `terminalWidth` – number of columns in the viewport
-* `topPosition` – top offset within the terminal
-* `leftPosition` – left offset within the terminal
+- `terminalHeight` – number of rows in the viewport
+- `terminalWidth` – number of columns in the viewport
+- `topPosition` – top offset within the terminal
+- `leftPosition` – left offset within the terminal
 
 ## Writing Text
+
 ```ts
 renderer.writeText(0, 0, 'Hello World');       // Top-left corner
 renderer.writeText(5, 10, 'Menu Options', true); // Clear existing content before writing
 renderer.render();                             // Display changes
 ```
 
-* `row` – 0-based row index in viewport
-* `column` – 0-based column index in viewport
-* `text` – string to display
-* `clean` – optional; clears existing content if true
+- `row` – 0-based row index in viewport
+- `column` – 0-based column index in viewport
+- `text` – string to display
+- `clean` – optional; clears existing content if true
 
 ## Basic Usage
 
@@ -234,6 +237,7 @@ showModal('Information', 'The operation completed successfully.\nAll files have 
 ```
 
 ## Terminal Bouncing Blocks Animation
+
 This TypeScript program creates a visually engaging terminal
 animation featuring multiple colored blocks (█) that bounce around your terminal window.
 
@@ -410,6 +414,7 @@ console.log('Press q or Ctrl+C to exit');
 ```
 
 ## Terminal Bouncing Block Animation
+
 A mesmerizing terminal-based animation featuring a colored block character (█) that bounces around your terminal window.
 This program creates a simple yet captivating visual effect using ANSI terminal capabilities.
 

@@ -1,9 +1,11 @@
 # xAnsi
 
-[![npm version](https://img.shields.io/badge/Documentation-orange?logo=typescript&logoColor=f5f5f5)](https://remotex-labs.github.io/xAnsi/)
+[![Documentation](https://img.shields.io/badge/Documentation-orange?logo=typescript&logoColor=f5f5f5)](https://remotex-labs.github.io/xAnsi/)
 [![npm version](https://img.shields.io/npm/v/@remotex-labs/xansi.svg)](https://www.npmjs.com/package/@remotex-labs/xansi)
+[![downloads](https://img.shields.io/npm/dm/@remotex-labs/xansi?label=npm%20downloads)](https://www.npmjs.com/package/@remotex-labs/xansi)
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL_2.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Node.js CI](https://github.com/remotex-labs/xAnsi/actions/workflows/node.js.yml/badge.svg)](https://github.com/remotex-labs/xnasi/actions/workflows/node.js.yml)
+[![Node.js CI](https://github.com/remotex-labs/xAnsi/actions/workflows/test.yml/badge.svg)](https://github.com/remotex-labs/xAnsi/actions/workflows/test.yml)
+[![Discord](https://img.shields.io/discord/1364348850696884234?logo=Discord&label=Discord)](https://discord.gg/psV9grS9th)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/remotex-labs/xAnsi)
 
 A lightweight ANSI utility library for styling terminal output.
@@ -17,10 +19,11 @@ xAnsi provides easy-to-use components for working with ANSI escape codes to crea
 - **xTerm Component**  
   Advanced terminal styling with chainable API for colors, backgrounds, text modifiers, RGB, and hexadecimal color codes. Supports template literals and type-safe style combinations.
 
-> Environment variable flag that indicates if color output should be disabled. @see https://no-color.org/ - The NO_COLOR standard specification
+> Environment variable flag that indicates if color output should be disabled. @see <https://no-color.org/> - The NO_COLOR standard specification
 
 - **Shadow Renderer**  
-  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state. Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
+  A virtual terminal renderer that efficiently manages screen updates by maintaining separate buffers for desired content and current display state.
+- Supports partial screen updates, content scrolling, variable viewport dimensions, and optimized rendering with minimal draw operations.
 
 ## Installation
 
@@ -29,6 +32,7 @@ npm install @remotex-labs/xansi
 ```
 
 ## Optimizing Bundle Size
+
 xAnsi supports subpath imports, allowing you to import only the specific components you need:
 
 ```typescript
@@ -41,6 +45,7 @@ import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ## Usage Examples
 
 ### ANSI Component
+
 ```ts
 import { writeRaw, ANSI } from '@remotex-labs/xansi';
 
@@ -55,6 +60,7 @@ writeRaw(ANSI.RESTORE_CURSOR);
 ```
 
 ### xTerm Component
+
 ```ts
 import { xterm } from '@remotex-labs/xansi';
 
@@ -75,6 +81,7 @@ console.log(xterm.cyan`Hello ${name}!`);
 ```
 
 ### Shadow Renderer
+
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 
@@ -84,20 +91,24 @@ renderer.render();
 ```
 
 ## Documentation
+
 For complete API documentation, examples, and guides, visit: [xAnsi Documentation](https://remotex-labs.github.io/xAnsi/)
 
 ## Compatibility
+
 - Node.js 20+
 - All modern browsers (via bundlers)
 - TypeScript 4.5+
 
 ## Contributing
+
 Contributions are welcome!\
 Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-
 ## License
+
 This project is licensed under the Mozilla Public License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
+
 - Built with TypeScript
