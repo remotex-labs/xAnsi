@@ -1,7 +1,10 @@
 ---
-name: 🐞 Bug Report
-description: Something is broken
-labels: [ "bug", "needs triage" ]
+name: "\U0001F41E Bug Report"
+about: Something is broken
+title: ''
+labels: bug
+assignees: ''
+
 ---
 
 **Describe the bug**
