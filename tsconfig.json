@@ -4,18 +4,15 @@
         "target": "ESNext",
         "module": "ESNext",
         "outDir": "dist",
-        "baseUrl": ".",
         "rootDir": "src",
         "declaration": true,
         "skipLibCheck": true,
-        "importHelpers": true,
         "esModuleInterop": true,
-        "isolatedModules": false,
+        "isolatedModules": true,
+        "moduleDetection": "force",
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "emitDeclarationOnly": true,
-        "allowSyntheticDefaultImports": true,
-        "forceConsistentCasingInFileNames": true,
         "lib": [
             "esnext"
         ],
@@ -24,13 +21,13 @@
         ],
         "paths": {
             "@services/*": [
-                "src/services/*"
+                "./src/services/*"
             ],
             "@providers/*": [
-                "src/providers/*"
+                "./src/providers/*"
             ],
             "@components/*": [
-                "src/components/*"
+                "./src/components/*"
             ]
         }
     },
