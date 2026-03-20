@@ -1,6 +1,7 @@
 ---
 name: 🐞 Bug Report
-description: Something is broken
+title: 🐞 Bug Report
+about: Something is broken
 labels: [ "bug", "needs triage" ]
 ---
 

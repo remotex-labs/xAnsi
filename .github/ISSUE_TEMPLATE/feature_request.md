@@ -1,6 +1,7 @@
 ---
 name: 💡 Feature request
-description: Suggest an idea or improvement
+title: 💡 Feature request
+about: Suggest an idea or improvement
 labels: [ "enhancement" ]
 ---
 
