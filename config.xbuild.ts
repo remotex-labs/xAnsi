@@ -23,7 +23,7 @@ export const config: xBuildConfig = {
             target: [ `node${ version.slice(1) }` ],
             platform: 'node',
             packages: 'external',
-            sourcemap: true,
+            sourcemap: 'linked',
             sourceRoot: `https://github.com/remotex-labs/xAnsi/tree/v${ pkg.version }/`,
             entryPoints: {
                 'index': 'src/index.ts',
