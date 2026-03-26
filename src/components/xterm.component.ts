@@ -19,41 +19,6 @@ import { ansiBackgroundColors, ansiForegroundColors, ansiModifiers } from '@prov
 export type * from '@components/interfaces/xterm-component.interface';
 
 /**
- * Unified collection of all ANSI style codes for efficient lookup
- *
- * @returns A merged record of all style codes including modifiers, foreground and background colors
- *
- * @remarks
- * This constant combines all style types (modifiers, foreground colors, and background colors)
- * into a single lookup object for improved performance when accessing style codes.
- * It's particularly useful in hot paths where style code lookups happen frequently.
- *
- * @example
- * ```ts
- * // Get the style code for bold text
- * const boldCode = styles.bold;
- *
- * // Get the style code for red foreground
- * const redCode = styles.red;
- *
- * // Get the style code for a blue background
- * const bgBlueCode = styles.bgBlue;
- * ```
- *
- * @see ansiModifiers
- * @see ansiForegroundColors
- * @see ansiBackgroundColors
- * @see StyleCodeType
- * @since 1.0.0
- */
-
-const styles: Record<string, StyleCodeType> = {
-    ...ansiModifiers,
-    ...ansiForegroundColors,
-    ...ansiBackgroundColors
-};
-
-/**
  * ANSI escape sequence prefix for terminal control codes
  *
  * @remarks
@@ -325,6 +290,12 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
             createXtermChain([ ...codes, rgbCode('bg', ...hexToRgb(hex)) ])
     };
 
+    const styles: Record<string, StyleCodeType> = {
+        ...ansiModifiers,
+        ...ansiForegroundColors,
+        ...ansiBackgroundColors
+    };
+
     // Create a proxy to handle property access for chaining
     return <AnsiChainableBuilderType>new Proxy(formatter, {
         get(target, prop: string | symbol): unknown {
@@ -388,4 +359,4 @@ function createXtermChain(codes: Array<StyleCodeType> = []): AnsiChainableBuilde
  * @since 1.0.0
  */
 
-export const xterm = createXtermChain();
+export const xterm = /*#__PURE__*/ createXtermChain();
