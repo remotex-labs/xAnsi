@@ -19,11 +19,13 @@ export const config: xBuildConfig = {
     common: {
         esbuild: {
             bundle: true,
-            minify: true,
+            minify: false,
             target: [ `node${ version.slice(1) }` ],
             platform: 'node',
             packages: 'external',
             sourcemap: 'linked',
+            minifySyntax: true,
+            minifyIdentifiers: true,
             sourceRoot: `https://github.com/remotex-labs/xAnsi/tree/v${ pkg.version }/`,
             entryPoints: {
                 'index': 'src/index.ts',
