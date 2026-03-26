@@ -39,5 +39,8 @@
         "dist",
         "**/*.spec.ts",
         "node_modules",
+    ],
+    "references": [
+        { "path": "./tsconfig.spec.json" }
     ]
 }
