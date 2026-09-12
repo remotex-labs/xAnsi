@@ -1,108 +1,123 @@
-# ANSI Component
+# ANSI
 
-The **ANSI component** provides essential utilities for terminal control using raw ANSI escape sequences,
-enabling low-level manipulation of terminal output for styling, cursor movement, and screen control.
+The ANSI component is the low-level half of xAnsi: a function that writes to the terminal without buffering, the
+escape sequences that move and clear the cursor, and the inverse of both - a function that strips styling back out
+of a string.
 
-## Imports
-
-You can import the ANSI component in two ways:
+## Import
 
 ```ts
-import { writeRaw, ANSI } from '@remotex-labs/xansi/ansi.component';
+import { ANSI, moveCursor, stripAnsi, writeRaw } from '@remotex-labs/xansi';
 ```
 
-or
+Or from the component's own subpath, so a bundler need not reach the rest of the package:
 
 ```ts
-import { writeRaw, ANSI } from '@remotex-labs/xansi';
+import { ANSI, moveCursor, stripAnsi, writeRaw } from '@remotex-labs/xansi/ansi.component';
 ```
 
-## Output Functions
+## `writeRaw`
 
-`writeRaw`
-
-Writes text or ANSI sequences directly to the terminal.
+Writes a string or a `Buffer` straight to the terminal, with no newline and no formatting of its own.
 
 ```ts
-import { writeRaw } from '@remotex-labs/xansi';
+import { writeRaw, xterm } from '@remotex-labs/xansi';
 
-// Simple text output
 writeRaw('Hello, world!');
-
-// Styled output using xterm
-import { xterm } from '@remotex-labs/xansi';
 writeRaw(xterm.bold.green('Success!'));
-
-// Multiline content
 writeRaw(`First line
 Second line`);
 ```
 
-Behavior:
+It uses `process.stdout.write` where that exists and falls back to `console.log` elsewhere, which is what makes it
+usable from a browser bundle as well as from Node.js.
 
-- Uses process.stdout.write in Node.js for efficient output.
-- Falls back to console.log in other environments.
+::: info 📤 Why not `console.log`
+`console.log` appends a newline and formats its arguments. An escape sequence that positions the cursor has to
+arrive exactly as written and without a newline after it, which is what `writeRaw` guarantees.
+:::
 
-## Cursor Movement
+## `moveCursor`
 
-`moveCursor`
-
-Generates an ANSI escape sequence to move the cursor to a specific position (1-based row/column).
+Returns the escape sequence that moves the cursor to a row and column. It writes nothing itself - pass the result
+to `writeRaw`.
 
 ```ts
 import { moveCursor, writeRaw } from '@remotex-labs/xansi';
 
-// Move cursor to row 5, column 10
 writeRaw(moveCursor(5, 10));
-writeRaw('Text at specific position');
+writeRaw('Text at row 5, column 10');
 
-// Move cursor to beginning of line 3
 writeRaw(moveCursor(3, 1));
 writeRaw('Line 3 content');
 ```
 
-::: tip
-The `moveCursor` function generates ANSI sequences to position the cursor at specific coordinates in the terminal.
-Both row and column use 1-based indexing (1 is the first row/column).
-:::
+Both arguments are 1-based: row 1, column 1 is the top-left corner. The column defaults to `0`, which most
+terminals treat as column 1.
 
-## Terminal Control Constants
+## `stripAnsi`
 
-The `ANSI` object provides common control sequences:
+Removes the styling sequences from a string and returns the plain text.
 
 ```ts
-import { ANSI, writeRaw } from '@remotex-labs/xansi';
+import { stripAnsi, xterm } from '@remotex-labs/xansi';
 
-// Clear the current line
-writeRaw(ANSI.CLEAR_LINE);
+const styled = xterm.red('Error!');
 
-// Hide and show cursor (useful for animations)
-writeRaw(ANSI.HIDE_CURSOR);
-// ... perform operations ...
-writeRaw(ANSI.SHOW_CURSOR);
-
-// Save and restore cursor position
-writeRaw(ANSI.SAVE_CURSOR);
-// ... move cursor and write content ...
-writeRaw(ANSI.RESTORE_CURSOR);
-
-// Clear the entire screen
-writeRaw(ANSI.CLEAR_SCREEN);
-
-// Clear screen from cursor down
-writeRaw(ANSI.CLEAR_SCREEN_DOWN);
-
-// Reset terminal to initial state (RIS)
-writeRaw(ANSI.RESET_TERMINAL);
+console.log(styled.length);            // 16 - the escape sequences count
+console.log(stripAnsi(styled));        // 'Error!'
+console.log(stripAnsi(styled).length); // 6
 ```
 
-Description of Key Constants:
+Use it to measure a string for layout, to write styled output to a log file, or to compare two strings that differ
+only in how they are colored. It removes the `ESC[…m` style sequences; cursor and screen sequences are left alone.
 
-- CLEAR_LINE – Clears from cursor to end of line.
-- CURSOR_HOME – Moves the cursor to the "home" position (row 1, column 1).
-- HIDE_CURSOR / SHOW_CURSOR – Hide or show the terminal cursor.
-- SAVE_CURSOR / RESTORE_CURSOR – Save and restore the cursor position.
-- CLEAR_SCREEN – Clears the whole screen and moves cursor home.
-- CLEAR_SCREEN_DOWN – Clears from cursor to the bottom of the screen.
-- RESET_TERMINAL – Hard reset of terminal (clears screen, scrollback, settings).
-- CURSOR_LINE_START – Moves the cursor to the beginning of the current line (column 1).
+## Terminal control constants
+
+`ANSI` holds the sequences that have no arguments, so they can be written as they are.
+
+| Constant            | Sequence      | Effect                                                          |
+|---------------------|---------------|-----------------------------------------------------------------|
+| `CLEAR_LINE`        | `ESC[K`       | Clears from the cursor to the end of the line.                  |
+| `CURSOR_HOME`       | `ESC[H`       | Moves the cursor to row 1, column 1.                            |
+| `CURSOR_LINE_START` | `ESC[1G`      | Moves the cursor to column 1, leaving the row alone.            |
+| `HIDE_CURSOR`       | `ESC[?25l`    | Hides the cursor.                                               |
+| `SHOW_CURSOR`       | `ESC[?25h`    | Shows the cursor.                                               |
+| `SAVE_CURSOR`       | `ESC[s`       | Saves the current cursor position.                              |
+| `RESTORE_CURSOR`    | `ESC[u`       | Restores the saved cursor position.                             |
+| `CLEAR_SCREEN_DOWN` | `ESC[0J`      | Clears from the cursor to the bottom of the screen.             |
+| `CLEAR_SCREEN_UP`   | `ESC[1J`      | Clears from the cursor to the top of the screen.                |
+| `CLEAR_SCREEN`      | `ESC[2JESC[H` | Clears the screen and homes the cursor, keeping the scrollback. |
+| `CLEAR_SCREEN_FULL` | `ESC[3JESC[H` | Clears the screen and the scrollback with it.                   |
+| `RESET_TERMINAL`    | `ESCc`        | Hard reset - screen, scrollback, and most settings.             |
+
+```ts
+import { ANSI, moveCursor, writeRaw } from '@remotex-labs/xansi';
+
+writeRaw(ANSI.HIDE_CURSOR);
+writeRaw(ANSI.CLEAR_SCREEN);
+
+writeRaw(ANSI.SAVE_CURSOR);
+writeRaw(moveCursor(5, 10));
+writeRaw('Hello there');
+writeRaw(ANSI.RESTORE_CURSOR);
+
+writeRaw(ANSI.SHOW_CURSOR);
+```
+
+::: tip 👻 Hide the cursor while you draw
+An animation that repositions the cursor on every frame draws it flickering across the screen. Write
+`ANSI.HIDE_CURSOR` before the loop and `ANSI.SHOW_CURSOR` from a `finally` block, so an early exit still leaves the
+terminal usable.
+:::
+
+::: warning 🔁 `CURSOR_LINE_START` is not `\r`
+`\r` is a carriage return the terminal interprets by its own rules; `ESC[1G` is an explicit column. Prefer the
+constant when the position has to hold across terminals.
+:::
+
+## See also
+
+- [Getting Started](/guide)
+- [xTerm](/guide/xterm)
+- [Shadow](/guide/shadow)
