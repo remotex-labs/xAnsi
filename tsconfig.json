@@ -20,14 +20,11 @@
             "node"
         ],
         "paths": {
+            "@constants/*": [
+                "./src/constants/*"
+            ],
             "@services/*": [
                 "./src/services/*"
-            ],
-            "@providers/*": [
-                "./src/providers/*"
-            ],
-            "@components/*": [
-                "./src/components/*"
             ]
         }
     },

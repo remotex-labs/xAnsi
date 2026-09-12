@@ -2,6 +2,5 @@
  * Exports
  */
 
-export * from '@services/shadow.service';
-export * from '@components/ansi.component';
-export * from '@components/xterm.component';
+export * from './services/ansi.service';
+export * from './services/xterm.service';
