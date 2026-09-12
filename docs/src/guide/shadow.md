@@ -1,628 +1,245 @@
-# ShadowRenderer
+# Shadow
 
-`ShadowRenderer` is a virtual terminal renderer for building efficient terminal-based UIs.
-It manages an internal content buffer and a view buffer to minimize redraws, supports scrolling, viewport resizing, and styled text output.
+`ShadowRenderer` is a virtual terminal viewport. Write into it at whatever row and column you like, call `render()`,
+and it compares what you wrote against what is already on screen and emits only the cells that differ. Content
+taller than the viewport stays in the buffer and is reached by scrolling rather than by redrawing.
 
-## Features
+## Import
 
-- Partial screen updates for performance
-- Content scrolling
-- Adjustable viewport dimensions
-- Rich text and ANSI styling support
-- Efficient diffing algorithm for minimal redraws
+```ts
+import { ShadowRenderer } from '@remotex-labs/xansi';
+```
 
-## Performance Considerations
-
-The Shadow Renderer is optimized for scenarios where:
-
-1. You're building interactive terminal UIs with frequent updates
-2. You need to manage content larger than the visible viewport
-3. You want to avoid screen flicker from complete redraws
-
-The diffing algorithm ensures minimal terminal I/O operations by tracking which cells have changed and only updating those specific positions.
-
-## Imports
-
-You can import the ANSI component in two ways:
+Or from the service's own subpath:
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi/shadow.service';
 ```
 
-or
+## Creating a renderer
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
-```
 
-## Creating a Renderer
-
-```ts
-// Create a renderer at row 2, column 3 with viewport size 80x24
+// A 24 x 80 viewport, offset 2 rows down and 3 columns in from the terminal's corner
 const renderer = new ShadowRenderer(24, 80, 2, 3);
 ```
 
-- `terminalHeight` – number of rows in the viewport
-- `terminalWidth` – number of columns in the viewport
-- `topPosition` – top offset within the terminal
-- `leftPosition` – left offset within the terminal
+| Parameter        | Meaning                                           |
+|------------------|---------------------------------------------------|
+| `terminalHeight` | Rows the viewport shows at once.                  |
+| `terminalWidth`  | Columns the viewport shows at once.               |
+| `topPosition`    | Rows between the terminal's top and the view.     |
+| `leftPosition`   | Columns between the terminal's left and the view. |
 
-## Writing Text
+Several renderers can share a terminal: give each one its own offsets and they draw side by side without knowing
+about each other.
 
-```ts
-renderer.writeText(0, 0, 'Hello World');       // Top-left corner
-renderer.writeText(5, 10, 'Menu Options', true); // Clear existing content before writing
-renderer.render();                             // Display changes
-```
+## The two buffers
 
-- `row` – 0-based row index in viewport
-- `column` – 0-based column index in viewport
-- `text` – string to display
-- `clean` – optional; clears existing content if true
+The content buffer holds everything written, however tall, as cells that each carry a character and a dirty flag.
+The view buffer holds what the terminal is currently showing. `render()` walks the visible slice of the first,
+compares it against the second, and writes a cursor move plus the changed characters - nothing else.
 
-> [!WARNING]
-> If the `text` parameter contains newline characters (`\n`), `writeText` will only process content up to the first newline.
-> For multi-line text, use `writeBlock` instead.
+That is what makes a redraw cheap: an update that changes one cell writes one cell.
 
-## Writing Blocks of Text
-
-The `writeBlock` method allows you to write multi-line text in a single operation:
+## Writing text
 
 ```ts
-import { ShadowRenderer } from '@remotex-labs/xansi';
-const renderer = new ShadowRenderer(10, 80, 0, 0);
-
-// Method 1: Write a multi-line block using a string with newlines const
-menuText = '1. File Operations\n2. Edit Options\n3. View Settings\n4. Exit Application'; 
-renderer.writeBlock(3, 5, menuText);
-
-// Method 2: Write a multi-line block using an array of strings const
-warningLines = [ 'WARNING:', 'Unsaved changes will be lost!' ]; 
-renderer.writeBloc(3, 5, warningLines);
+renderer.writeText(0, 0, 'Hello World');
+renderer.writeText(5, 10, 'Menu Options', true); // clear the row first
+renderer.render();
 ```
 
-- `row` - Starting row position (0-based)
-- `column` - Starting column position (0-based)
-- `text` - Content to write, which can be either:
-  - A string that will be automatically split at newline characters (`\n`)
-  - An array of strings, where each element represents a line
-- `clean` - Optional; when set to `true`, clears existing content before writing the line
+| Parameter | Meaning                                                        |
+|-----------|----------------------------------------------------------------|
+| `row`     | 0-based row in the content buffer.                             |
+| `column`  | 0-based column.                                                |
+| `text`    | The string to write, styling included.                         |
+| `clean`   | Optional. Empties the row before writing, rather than over it. |
 
-This method automatically allocates new rows in the content buffer as needed,
-making it suitable for rendering large blocks of text that can be scrolled with the renderer.
+Styled text is fine: the string is split so that each cell keeps the escape sequences it needs, and a style never
+bleeds into the cells after it. Rows past the bottom of the viewport are kept, not dropped - they scroll into view.
 
-::: danger STOP
-This method overrides all existing content in the rows it writes to.
-The new text will replace any content previously written to these rows.
+::: warning ↩️ One line per call
+`writeText` stops at the first `\n` and writes only what came before it. Use `writeBlock` for multi-line content.
 :::
 
-## Basic Usage
+## Writing blocks
 
-```ts
-import { ShadowRenderer, writeRaw, ANSI } from '@remotex-labs/xansi';
-
-const topLeft = new ShadowRenderer(5, 40, 0, 0);
-const topRight = new ShadowRenderer(5, 40, 0, 40);
-const left = new ShadowRenderer(6, 40, 5, 5);
-const right = new ShadowRenderer(6, 40, 5, 45);
-
-writeRaw(ANSI.HIDE_CURSOR);
-writeRaw(ANSI.CLEAR_SCREEN);
-
-const letters = 'abcdefghijklmnopqrstuvwxyz';
-let topIndex = 0;
-let index = 0;
-
-setInterval(() => {
-    for (let i = 0; i < 5; i++) {
-        const letterIndex = (topIndex + i) % letters.length;
-        const letter = letters[letterIndex];
-        topLeft.writeText(i, i, letter); // example: row = col = i
-        topRight.writeText(i, i, letter); // example: row = col = i
-    }
-
-    topLeft.render();
-    topRight.render();
-
-    topIndex = (topIndex + 1) % letters.length;
-}, 1000); // 1000ms = 1 second
-
-setInterval(() => {
-    for (let i = 0; i < 5; i++) {
-        // Go backward from index: index, index-1, ..., index-4
-        const letterIndex = (index - i + letters.length) % letters.length;
-        const letter = letters[letterIndex];
-        left.writeText(i, i, letter); // Display diagonally
-        right.writeText(i, i, letter); // Display diagonally
-    }
-
-    left.render();
-    right.render();
-
-    // Move backward in the alphabet
-    index = (index - 1 + letters.length) % letters.length;
-}, 1000);
-```
-
-## Viewport Management
+`writeBlock` writes several rows in one call, taking either a string split on `\n` or an array of lines.
 
 ```ts
 import { ShadowRenderer } from '@remotex-labs/xansi';
 
-// Create a renderer that occupies the top part of the terminal
 const renderer = new ShadowRenderer(10, 80, 0, 0);
 
-// Reposition the renderer to create space for a header
-renderer.top = 3;     // Now starts at row 3 (below a header area)
-renderer.left = 2;    // Indented by 2 columns
+// From a string
+renderer.writeBlock(3, 5, '1. File Operations\n2. Edit Options\n3. View Settings\n4. Exit');
 
-// Resize the renderer to accommodate a sidebar
-renderer.width = 70;  // Reduce width to leave space for a sidebar
+// From an array of lines
+renderer.writeBlock(8, 5, [ 'WARNING:', 'Unsaved changes will be lost!' ]);
 
-// Handle terminal resize events
-process.stdout.on('resize', () => {
-  // Adjust to new terminal dimensions
-  renderer.width = process.stdout.columns - 10;  // Leave 10 columns for sidebar
-  renderer.height = process.stdout.rows - 5;     // Leave 5 rows for header/footer
-  
-  // Force redraw after resize
-  renderer.render(true);
-});
+renderer.render();
 ```
 
-## Flushing to Terminal
+Each line lands on a successive row starting at `row`, and rows are allocated as needed, so a block may be taller
+than the viewport. The `clean` flag applies to every row the block touches.
 
-- Sends all rendered content to the terminal output
-- Clears the internal buffer after flushing
-- Does not require a further call to `render()`
-
-> [!CAUTION]
-> This method immediately writes all buffered content to the standard output.
-> Unlike `render()` which updates the terminal view while maintaining content in the buffer, `flushToTerminal()` outputs the content and then clears the buffer.
-> After calling this method, any previously rendered content will no longer be available in the renderer's buffer.
+## Rendering
 
 ```ts
-import { ShadowRenderer } from '@remotex-labs/xansi';
-const renderer = new ShadowRenderer(10, 80, 0, 0);
-// Write some content renderer.
-writeText(0, 0, 'Hello World'); 
-renderer.writeBlock(2, 0, 'Line 1\nLine 2\nLine 3');
-
-// Flush all content to the terminal 
-renderer.flushToTerminal();
+renderer.render();      // write only what changed
+renderer.render(true);  // write every visible cell
 ```
 
-## Content Scrolling
+Force a full redraw after something outside the renderer has written to the same area - another process, a resize,
+or a `writeRaw` of your own. Otherwise the diff is the point, and the plain call is the one to make.
+
+## Clearing
 
 ```ts
+renderer.clearScreen(); // erase the rows the renderer occupies on screen
+renderer.clear();       // empty both buffers
+```
 
+The two are separate on purpose. `clearScreen()` wipes what the terminal is showing and homes the cursor, leaving
+the content in the buffer to be rendered again. `clear()` throws away the content and the record of what is on
+screen, but writes nothing - call `clearScreen()` first if the terminal should be blank too.
+
+## Scrolling
+
+`scroll` is the index of the content row shown at the top of the viewport. Assigning to it re-renders.
+
+```ts
+renderer.scroll = 0;    // back to the top
+renderer.scroll = 20;   // show content row 20 at the top
+renderer.scroll += 1;   // one row down
+renderer.scroll = -5;   // five rows back up
+```
+
+A value of 0 or more is an absolute row. A negative value is a movement instead, applied to the row currently at
+the top. Either way the result is clamped to the content, so scrolling past either end is a no-op rather than a
+blank screen.
+
+::: warning ↕️ Prefer `= -n` for scrolling up
+`renderer.scroll -= 5` reads the current row and assigns the difference, which is absolute while that difference
+stays at 0 or above and becomes a relative move once it drops below - so near the top it moves by less than five.
+`renderer.scroll = -5` is relative in every case.
+:::
+
+```ts
 import * as readline from 'readline';
-import { ShadowRenderer } from '@services/shadow.service';
-import { ANSI, writeRaw } from '@components/ansi.component';
+import { ANSI, ShadowRenderer, writeRaw } from '@remotex-labs/xansi';
 
-// Create a renderer with viewport 10 rows x 50 columns at the top 3 left corners
 const renderer = new ShadowRenderer(10, 50, 3, 0);
 
-// Write all content to the renderer
 for (let i = 0; i < 100; i++) {
     renderer.writeText(i, 0, `Item ${ i + 1 }: Scrollable content example`);
 }
 
-// Initial render
 renderer.render();
 
-// Setup keyboard input for scrolling
 readline.emitKeypressEvents(process.stdin);
 process.stdin.setRawMode(true);
 
-process.stdin.on('keypress', (str, key) => {
+process.stdin.on('keypress', (_str, key) => {
     if (key.ctrl && key.name === 'c') {
-        // Clear screen and exit on Ctrl+C
         writeRaw(ANSI.CLEAR_SCREEN);
         writeRaw(ANSI.SHOW_CURSOR);
         process.exit(0);
     }
 
     switch (key.name) {
-        case 'up':
-            renderer.scroll -= 1; // Scroll up one row
-            break;
-        case 'down':
-            renderer.scroll += 1;  // Scroll down one row
-            break;
-        case 'pageup':
-            renderer.scroll -= 5; // Scroll up five rows
-            break;
-        case 'pagedown':
-            renderer.scroll += 5;  // Scroll down five rows
-            break;
+        case 'up':       renderer.scroll = -1; break;
+        case 'down':     renderer.scroll += 1; break;
+        case 'pageup':   renderer.scroll = -5; break;
+        case 'pagedown': renderer.scroll += 5; break;
     }
 });
-
 ```
 
-## Advanced Rendering Techniques
+## Moving and resizing the viewport
+
+`top`, `left`, `width`, and `height` are all readable and writable after construction. They change where the next
+render draws; they do not redraw on their own.
 
 ```ts
-import { ShadowRenderer, writeRaw, ANSI, xterm } from '@remotex-labs/xansi';
+const renderer = new ShadowRenderer(10, 80, 0, 0);
 
-// Create a renderer for a modal dialog
+renderer.top = 3;    // leave room for a header
+renderer.left = 2;
+renderer.width = 70; // leave room for a sidebar
+
+process.stdout.on('resize', () => {
+    renderer.width = process.stdout.columns - 10;
+    renderer.height = process.stdout.rows - 5;
+    renderer.render(true); // the terminal cleared itself, so force a full redraw
+});
+```
+
+## Flushing to terminal
+
+`flushToTerminal()` writes the whole content buffer to stdout as ordinary lines, clearing each one as it goes, and
+then empties both buffers.
+
+```ts
+import { ShadowRenderer } from '@remotex-labs/xansi';
+
+const renderer = new ShadowRenderer(10, 80, 0, 0);
+
+renderer.writeText(0, 0, 'Hello World');
+renderer.writeBlock(2, 0, 'Line 1\nLine 2\nLine 3');
+renderer.flushToTerminal();
+```
+
+Use it for output that should scroll away with the rest of the session - a finished progress display, a log the
+user keeps. Unlike `render()` it does no diffing, positions nothing absolutely, and leaves the renderer empty, so
+anything written before the flush is gone.
+
+## A worked example
+
+A modal dialog drawn into its own renderer, cleared and redrawn each time it is shown:
+
+```ts
+import { ANSI, ShadowRenderer, writeRaw, xterm } from '@remotex-labs/xansi';
+
 const renderer = new ShadowRenderer(10, 50, 5, 20);
 writeRaw(ANSI.CLEAR_SCREEN);
 
-// Create a modal dialog with title and content
-function showModal(title, content) {
-    // Hide cursor during rendering to prevent flicker
+function showModal(title: string, content: string): void {
     writeRaw(ANSI.HIDE_CURSOR);
 
     try {
-        // Clear previous buffer content
+        renderer.clearScreen();
         renderer.clear();
 
-        // Clear screen
-        renderer.clearScreen();
-        const totalWidth = 40;
-        const labelWithPadding = ` ${ title } `;
-        const lineWidth = totalWidth - 2;
+        const width = 40;
+        const label = ` ${ title } `;
+        const dashes = width - 2 - label.length;
+        const left = Math.floor(dashes / 2);
 
-        const dashCount = lineWidth - labelWithPadding.length;
-        const leftDashes = Math.floor(dashCount / 2);
-        const rightDashes = dashCount - leftDashes;
-        const line = '┌' + '─'.repeat(leftDashes) + xterm.hex('#bf1e1e').bold.dim(labelWithPadding) + '─'.repeat(rightDashes) + '┐';
-
-        // Draw border and title
-        renderer.writeText(0, 0, line);
-
-        // Draw content
-        const lines = content.split('\n');
-        for (let i = 0; i < lines.length; i++) {
-            renderer.writeText(i + 2, 2, lines[i]);
-        }
-
-        // Draw bottom border
-        renderer.writeText(9, 0, '└' + '─'.repeat(38) + '┘');
-
-        // Replace content with clean flag to ensure no artifacts
+        renderer.writeText(0, 0, `┌${ '─'.repeat(left) }${ xterm.hex('#bf1e1e').bold(label) }${ '─'.repeat(dashes - left) }┐`);
+        renderer.writeBlock(2, 2, content);
         renderer.writeText(8, 2, xterm.dim('Press any key to continue...'), true);
+        renderer.writeText(9, 0, `└${ '─'.repeat(width - 2) }┘`);
 
-        // Force complete redraw
         renderer.render(true);
     } finally {
-        // Always restore cursor visibility
         writeRaw(ANSI.SHOW_CURSOR);
     }
 }
 
-// Usage example
 showModal('Information', 'The operation completed successfully.\nAll files have been processed.');
 ```
 
-## Terminal Bouncing Blocks Animation
+::: tip 🎨 Styling the cells
+Any [xTerm](/guide/xterm) chain can be written into a cell. The renderer keeps the sequences per cell, so a styled
+run survives being scrolled, partially overwritten, or split by the viewport edge.
+:::
 
-This TypeScript program creates a visually engaging terminal
-animation featuring multiple colored blocks (█) that bounce around your terminal window.
+## See also
 
-```ts
-import { createInterface } from 'readline';
-import { ShadowRenderer, writeRaw, ANSI, xterm } from '@remotex-labs/xansi';
-
-interface BallInterface {
-    x: number;
-    y: number;
-    dx: number;
-    dy: number;
-    colorStep: number;
-    prevColor: string;
-    nextColor: string;
-}
-
-class BouncingBalls {
-    private renderer: ShadowRenderer;
-    private width = 0;
-    private height = 0;
-    private intervalId: NodeJS.Timeout | null = null;
-    private balls: BallInterface[] = [];
-    private fadeSteps = 30;
-    private ballCount = 15;
-
-    constructor() {
-        this.renderer = new ShadowRenderer(this.height, this.width, 0, 0);
-        this.updateTerminalSize();
-
-        process.stdout.on('resize', () => this.updateTerminalSize());
-
-        writeRaw(ANSI.HIDE_CURSOR);
-        writeRaw(ANSI.CLEAR_SCREEN);
-
-        // Initialize multiple balls
-        this.initializeBalls();
-    }
-
-    start(frameRate = 50): void {
-        if (this.intervalId) clearInterval(this.intervalId);
-
-        this.intervalId = setInterval(() => {
-            this.updateBallPositions();
-            this.drawBalls();
-        }, frameRate);
-
-        createInterface({ input: process.stdin, output: process.stdout });
-        process.stdin?.setRawMode?.(true);
-        process.stdin.on('data', (key) => {
-            if (key.toString() === '\u0003' || key.toString().toLowerCase() === 'q') {
-                this.stop();
-                process.exit(0);
-            }
-        });
-    }
-
-    stop(): void {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
-        writeRaw(ANSI.CLEAR_SCREEN);
-        writeRaw(ANSI.SHOW_CURSOR);
-    }
-
-    private initializeBalls(): void {
-        this.balls = [];
-        for (let i = 0; i < this.ballCount; i++) {
-            const x = Math.floor(Math.random() * (this.width - 4));
-            const y = Math.floor(Math.random() * (this.height - 2));
-            const dx = Math.random() > 0.5 ? 1 : -1;
-            const dy = Math.random() > 0.5 ? 1 : -1;
-            const initialColor = this.getColor(x, y);
-
-            this.balls.push({
-                x,
-                y,
-                dx,
-                dy,
-                colorStep: 0,
-                prevColor: initialColor,
-                nextColor: initialColor
-            });
-        }
-    }
-
-    private updateTerminalSize(): void {
-        this.width = process.stdout.columns || 80;
-        this.height = process.stdout.rows || 24;
-
-        this.renderer.width = this.width;
-        this.renderer.height = this.height;
-
-        // Reinitialize balls when terminal size changes
-        this.initializeBalls();
-    }
-
-    private getColor(x: number, y: number): string {
-        const r = (x * 5) % 255;
-        const g = (y * 5) % 255;
-        const b = ((x + y) * 3) % 255;
-
-        return `#${ r.toString(16).padStart(2, '0') }${ g.toString(16).padStart(2, '0') }${ b.toString(16).padStart(2, '0') }`;
-    }
-
-    private hexToRgb(hex: string): [number, number, number] {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-
-        return result
-            ? [
-                parseInt(result[1], 16),
-                parseInt(result[2], 16),
-                parseInt(result[3], 16)
-            ]
-            : [ 255, 255, 255 ];
-    }
-
-    private interpolateColor(c1: string, c2: string, t: number): string {
-        const [ r1, g1, b1 ] = this.hexToRgb(c1);
-        const [ r2, g2, b2 ] = this.hexToRgb(c2);
-        const r = Math.round(r1 + (r2 - r1) * t);
-        const g = Math.round(g1 + (g2 - g1) * t);
-        const b = Math.round(b1 + (b2 - b1) * t);
-
-        return `#${ [ r, g, b ].map((v) => v.toString(16).padStart(2, '0')).join('') }`;
-    }
-
-    private getFadedColor(ball: BallInterface): string {
-        const t = ball.colorStep / this.fadeSteps;
-        const color = this.interpolateColor(ball.prevColor, ball.nextColor, t);
-        ball.colorStep++;
-
-        if (ball.colorStep > this.fadeSteps) {
-            ball.colorStep = 0;
-            ball.prevColor = ball.nextColor;
-            ball.nextColor = this.getColor(ball.x, ball.y);
-        }
-
-        return color;
-    }
-
-    private drawBalls(): void {
-        for (const ball of this.balls) {
-            const color = this.getFadedColor(ball);
-            this.renderer.writeText(ball.y, ball.x, xterm.hex(color).bold('█'), true);
-        }
-
-        this.renderer.render();
-    }
-
-    private updateBallPositions(): void {
-        for (const ball of this.balls) {
-            ball.x += ball.dx;
-            ball.y += ball.dy;
-
-            // Bounce off walls
-            if (ball.x <= 0 || ball.x >= this.width - 1) {
-                ball.dx = -ball.dx;
-                ball.x = Math.max(0, Math.min(this.width - 1, ball.x));
-            }
-
-            if (ball.y <= 0 || ball.y >= this.height - 1) {
-                ball.dy = -ball.dy;
-                ball.y = Math.max(0, Math.min(this.height - 1, ball.y));
-            }
-        }
-    }
-}
-
-const balls = new BouncingBalls();
-balls.start(15); // smoother animation
-console.log('Press q or Ctrl+C to exit');
-```
-
-## Terminal Bouncing Block Animation
-
-A mesmerizing terminal-based animation featuring a colored block character (█) that bounces around your terminal window.
-This program creates a simple yet captivating visual effect using ANSI terminal capabilities.
-
-```ts
-import { ShadowRenderer, writeRaw, ANSI, xterm } from '@remotex-labs/xansi';
-import { createInterface } from 'readline';
-
-class BouncingBall {
-    private x = 0;
-    private y = 0;
-    private dx = 1;
-    private dy = 1;
-    private width = 0;
-    private height = 0;
-    private intervalId: NodeJS.Timeout | null = null;
-
-    private colorStep = 0;
-    private fadeSteps = 30;
-    private prevColor = '#000000';
-    private nextColor = '#ffffff';
-    private renderer: ShadowRenderer;
-
-    constructor() {
-        this.renderer = new ShadowRenderer(this.height, this.width, 0, 0);
-        this.updateTerminalSize();
-
-        process.stdout.on('resize', () => this.updateTerminalSize());
-
-        writeRaw(ANSI.HIDE_CURSOR);
-        writeRaw(ANSI.CLEAR_SCREEN);
-
-        this.resetPosition();
-        this.prevColor = this.getColor(this.x, this.y);
-        this.nextColor = this.prevColor;
-    }
-
-    private updateTerminalSize(): void {
-        this.width = process.stdout.columns || 80;
-        this.height = process.stdout.rows || 24;
-
-        this.renderer.width = this.width;
-        this.renderer.height = this.height;
-
-        if (this.x >= this.width - 4 || this.y >= this.height - 2) {
-            this.resetPosition();
-        }
-    }
-
-    private resetPosition(): void {
-        this.x = Math.floor(this.width / 2);
-        this.y = Math.floor(this.height / 2);
-    }
-
-    private getColor(x: number, y: number): string {
-        const r = (x * 5) % 255;
-        const g = (y * 5) % 255;
-        const b = ((x + y) * 3) % 255;
-        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-    }
-
-    private hexToRgb(hex: string): [number, number, number] {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result
-            ? [
-                parseInt(result[1], 16),
-                parseInt(result[2], 16),
-                parseInt(result[3], 16)
-            ]
-            : [255, 255, 255];
-    }
-
-    private interpolateColor(c1: string, c2: string, t: number): string {
-        const [r1, g1, b1] = this.hexToRgb(c1);
-        const [r2, g2, b2] = this.hexToRgb(c2);
-        const r = Math.round(r1 + (r2 - r1) * t);
-        const g = Math.round(g1 + (g2 - g1) * t);
-        const b = Math.round(b1 + (b2 - b1) * t);
-        return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-    }
-
-    private getFadedColor(): string {
-        const t = this.colorStep / this.fadeSteps;
-        const color = this.interpolateColor(this.prevColor, this.nextColor, t);
-        this.colorStep++;
-
-        if (this.colorStep > this.fadeSteps) {
-            this.colorStep = 0;
-            this.prevColor = this.nextColor;
-            this.nextColor = this.getColor(this.x, this.y);
-        }
-
-        return color;
-    }
-
-    private drawBall(): void {
-        const color = this.getFadedColor();
-
-        this.renderer.writeText(this.y, this.x, xterm.hex(color).bold('█'), true);
-        this.renderer.writeText(this.y, this.x + 1, xterm.hex(color).bold('█'), true);
-
-        this.renderer.render();
-    }
-
-    private updateBallPosition(): void {
-        this.x += this.dx;
-        this.y += this.dy;
-
-        if (this.x <= 0 || this.x >= this.width - 3) {
-            this.dx = -this.dx;
-            this.x = Math.max(0, Math.min(this.width - 3, this.x));
-        }
-
-        if (this.y <= 0 || this.y >= this.height - 2) {
-            this.dy = -this.dy;
-            this.y = Math.max(0, Math.min(this.height - 2, this.y));
-        }
-    }
-
-    public start(frameRate = 50): void {
-        if (this.intervalId) clearInterval(this.intervalId);
-
-        this.intervalId = setInterval(() => {
-            this.updateBallPosition();
-            this.drawBall();
-        }, frameRate);
-
-        const rl = createInterface({ input: process.stdin, output: process.stdout });
-        process.stdin?.setRawMode?.(true);
-        process.stdin.on('data', (key) => {
-            if (key.toString() === '\u0003' || key.toString().toLowerCase() === 'q') {
-                this.stop();
-                process.exit(0);
-            }
-        });
-    }
-
-    public stop(): void {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
-        writeRaw(ANSI.CLEAR_SCREEN);
-        writeRaw(ANSI.SHOW_CURSOR);
-    }
-}
-
-const ball = new BouncingBall();
-ball.start(15); // smoother animation
-console.log('Press q or Ctrl+C to exit');
-```
+- [Getting Started](/guide)
+- [ANSI](/guide/ansi)
+- [xTerm](/guide/xterm)
