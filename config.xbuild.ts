@@ -31,10 +31,7 @@ export const config: xBuildConfig = {
             minifyIdentifiers: true,
             sourceRoot: `https://github.com/remotex-labs/xAnsi/tree/v${ pkg.version }/`,
             entryPoints: {
-                'index': 'src/index.ts',
-                'shadow.service': 'src/services/shadow.service.ts',
-                'ansi.component': 'src/components/ansi.component.ts',
-                'xterm.component': 'src/components/xterm.component.ts'
+                'index': 'src/index.ts'
             }
         }
     },

@@ -9,6 +9,7 @@
     "license": "Mozilla Public License Version 2.0",
     "homepage": "https://remotex-labs.github.io/xAnsi",
     "description": "A lightweight ANSI utility library for styling terminal output",
+    "sideEffects": false,
     "repository": {
         "type": "git",
         "url": "git+https://github.com/remotex-labs/xAnsi.git"
@@ -30,28 +31,13 @@
         "escape-codes"
     ],
     "engines": {
-        "node": ">=20"
+        "node": ">=22"
     },
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/esm/index.js",
             "require": "./dist/cjs/index.js"
-        },
-        "./ansi.component": {
-            "types": "./dist/ansi.component.d.ts",
-            "import": "./dist/esm/ansi.component.js",
-            "require": "./dist/cjs/ansi.component.js"
-        },
-        "./xterm.component": {
-            "types": "./dist/xterm.component.d.ts",
-            "import": "./dist/esm/xterm.component.js",
-            "require": "./dist/cjs/xterm.component.js"
-        },
-        "./shadow.service": {
-            "types": "./dist/shadow.service.d.ts",
-            "import": "./dist/esm/shadow.service.js",
-            "require": "./dist/cjs/shadow.service.js"
         }
     },
     "files": [
@@ -87,5 +73,8 @@
         "@viteplus/versions": "^2.0.9",
         "@remotex-labs/xjet": "^1.5.6",
         "@remotex-labs/xbuild": "^3.0.3"
+    },
+    "dependencies": {
+        "@remotex-labs/xobservable": "^1.1.0"
     }
 }
