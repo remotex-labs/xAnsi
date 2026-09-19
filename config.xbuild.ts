@@ -28,7 +28,7 @@ export const config: xBuildConfig = {
             packages: 'external',
             sourcemap: 'linked',
             minifySyntax: true,
-            minifyIdentifiers: true,
+            minifyWhitespace: true,
             sourceRoot: `https://github.com/remotex-labs/xAnsi/tree/v${ pkg.version }/`,
             entryPoints: {
                 'index': 'src/index.ts'

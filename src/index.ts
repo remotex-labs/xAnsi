@@ -4,16 +4,14 @@
 
 // Interfaces
 export type * from '@services/interfaces/xterm-service.interface';
+export type * from '@components//interfaces/ansi-component.interface';
 
 // Constants
 export * from '@constants/ansi.constant';
-export * from '@constants/text.constant';
 
 // Components
-export * from './components/text.component';
+export * from '@components/ansi.component';
+export * from '@components/color.component';
 
 // Services
-export * from '@services/ansi.service';
 export * from '@services/xterm.service';
-export * from '@services/renderer.service';
-

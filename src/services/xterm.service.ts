@@ -10,7 +10,7 @@ import type { AnsiFgChainType, AnsiModChainType } from '@services/interfaces/xte
  * Imports
  */
 
-import { CSI } from '@constants/ansi.constant';
+import { channel, parseHex } from '@components/color.component';
 
 /**
  * Rewrites every closing sequence a chain owns back into the opening one it closed.
@@ -43,9 +43,9 @@ export function restore(text: string, open: string, close: string): string {
     let start = 0;
 
     while (start < close.length) {
-        const next = close.indexOf(CSI, start + 2);
+        const next = close.indexOf('\x1b[', start + 2);
         const stop = next < 0 ? close.length : next;
-        const prev = open.lastIndexOf(CSI, end - 1);
+        const prev = open.lastIndexOf('\x1b[', end - 1);
 
         text = text.replaceAll(close.slice(start, stop), open.slice(prev, end));
         start = stop;
@@ -103,7 +103,7 @@ export function derive<T = AnsiChainableBuilderType>(parent: unknown, styleOpen:
         } else text = args.length === 1 ? <string> head : args.join(' ');
 
         if (globalThis.NO_COLOR) return text;
-        if (text.includes(CSI)) text = restore(text, open, close);
+        if (text.includes('\x1b[')) text = restore(text, open, close);
 
         return open + text + close;
     };
@@ -139,7 +139,7 @@ export function derive<T = AnsiChainableBuilderType>(parent: unknown, styleOpen:
  */
 
 export function fg<T>(parent: unknown, open: string): T {
-    return derive<T>(parent, open, CSI + '39m');
+    return derive<T>(parent, open, '\x1b[39m');
 }
 
 /**
@@ -166,7 +166,7 @@ export function fg<T>(parent: unknown, open: string): T {
  */
 
 export function bg<T>(parent: unknown, open: string): T {
-    return derive<T>(parent, open, CSI + '49m');
+    return derive<T>(parent, open, '\x1b[49m');
 }
 
 /**
@@ -175,15 +175,17 @@ export function bg<T>(parent: unknown, open: string): T {
  * @typeParam T - The chain type the caller declares, narrowed by what the color rules out
  * @param parent - The chain the color extends
  * @param code - `38` for a foreground color, `48` for a background one
- * @param r - The red component, `0`-`255`
- * @param g - The green component, `0`-`255`
- * @param b - The blue component, `0`-`255`
+ * @param r - The red component, rounded and clamped to `0`-`255`
+ * @param g - The green component, rounded and clamped to `0`-`255`
+ * @param b - The blue component, rounded and clamped to `0`-`255`
  * @returns A chain carrying the color on top of what it already held
  * @throws Error - When a component is not a finite number
  *
  * @remarks
  * The check runs where the chain is built rather than where it is called, so a bad component reports at its own
  * call site instead of surfacing as a garbled line further down.
+ * A component that is finite but outside the range is clamped rather than rejected, which keeps a computed color
+ * from emitting a sequence no terminal can read.
  *
  * @example
  * ```ts
@@ -198,7 +200,9 @@ export function rgbChain<T>(parent: unknown, code: 38 | 48, r: number, g: number
     if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b))
         throw new Error(`RGB values must be numbers, received: r=${ r }, g=${ g }, b=${ b }`);
 
-    return derive<T>(parent, CSI + `${ code };2;${ r };${ g };${ b }m`, code === 38 ? CSI + '39m' : CSI + '49m');
+    const open = `\x1b[${ code };2;${ channel(r) };${ channel(g) };${ channel(b) }m`;
+
+    return code === 38 ? fg<T>(parent, open) : bg<T>(parent, open);
 }
 
 /**
@@ -212,9 +216,8 @@ export function rgbChain<T>(parent: unknown, code: 38 | 48, r: number, g: number
  * @throws Error - When the string is not 3 or 6 hexadecimal digits
  *
  * @remarks
- * A 3 digit color doubles each digit first, so `#f50` and `#ff5500` parse alike.
- * One parse over the whole string and three shifts read the components out, which spares the two extra parses a
- * component-at-a-time reading would cost.
+ * The parsing itself lives in {@link parseHex}, which the sequence builders share, so a hex color reads the same
+ * way wherever the library accepts one.
  *
  * @example
  * ```ts
@@ -226,13 +229,9 @@ export function rgbChain<T>(parent: unknown, code: 38 | 48, r: number, g: number
  */
 
 export function hexChain<T>(parent: unknown, code: 38 | 48, hex: string): T {
-    const digits = hex.charCodeAt(0) === 35 ? hex.slice(1) : hex;
-    if (!/^(?:[\da-f]{3}|[\da-f]{6})$/i.test(digits))
-        throw new Error(`Invalid hex color format: "${ hex }". Expected 3 or 6 hex digits.`);
+    const { red, green, blue } = parseHex(hex);
 
-    const value = parseInt(digits.length === 3 ? digits.replace(/./g, '$&$&') : digits, 16);
-
-    return rgbChain<T>(parent, code, value >>> 16 & 255, value >>> 8 & 255, value & 255);
+    return rgbChain<T>(parent, code, red, green, blue);
 }
 
 /**
@@ -278,113 +277,113 @@ export const xterm = {
     /* Modifiers */
 
     /** The dim modifier. */
-    get dim(): AnsiModChainType<'dim'> { return derive(this, CSI + '2m', CSI + '22m'); },
+    get dim(): AnsiModChainType<'dim'> { return derive(this, '\x1b[2m', '\x1b[22m'); },
     /** The bold modifier. */
-    get bold(): AnsiModChainType<'bold'> { return derive(this, CSI + '1m', CSI + '22m'); },
+    get bold(): AnsiModChainType<'bold'> { return derive(this, '\x1b[1m', '\x1b[22m'); },
     /** A full reset around the text. */
-    get reset(): AnsiModChainType<'reset'> { return derive(this, CSI + '0m', CSI + '0m'); },
+    get reset(): AnsiModChainType<'reset'> { return derive(this, '\x1b[0m', '\x1b[0m'); },
     /** The hidden modifier. */
-    get hidden(): AnsiModChainType<'hidden'> { return derive(this, CSI + '8m', CSI + '28m'); },
+    get hidden(): AnsiModChainType<'hidden'> { return derive(this, '\x1b[8m', '\x1b[28m'); },
     /** The inverse modifier. */
-    get inverse(): AnsiModChainType<'inverse'> { return derive(this, CSI + '7m', CSI + '27m'); },
+    get inverse(): AnsiModChainType<'inverse'> { return derive(this, '\x1b[7m', '\x1b[27m'); },
 
     /* Foreground colors */
 
     /** The red foreground color. */
-    get red(): AnsiFgChainType { return fg(this, CSI + '31m'); },
+    get red(): AnsiFgChainType { return fg(this, '\x1b[31m'); },
     /** The gray foreground color. */
-    get gray(): AnsiFgChainType { return fg(this, CSI + '90m'); },
+    get gray(): AnsiFgChainType { return fg(this, '\x1b[90m'); },
     /** The blue foreground color. */
-    get blue(): AnsiFgChainType { return fg(this, CSI + '34m'); },
+    get blue(): AnsiFgChainType { return fg(this, '\x1b[34m'); },
     /** The cyan foreground color. */
-    get cyan(): AnsiFgChainType { return fg(this, CSI + '36m'); },
+    get cyan(): AnsiFgChainType { return fg(this, '\x1b[36m'); },
     /** The black foreground color. */
-    get black(): AnsiFgChainType { return fg(this, CSI + '30m'); },
+    get black(): AnsiFgChainType { return fg(this, '\x1b[30m'); },
     /** The white foreground color. */
-    get white(): AnsiFgChainType { return fg(this, CSI + '37m'); },
+    get white(): AnsiFgChainType { return fg(this, '\x1b[37m'); },
     /** The green foreground color. */
-    get green(): AnsiFgChainType { return fg(this, CSI + '32m'); },
+    get green(): AnsiFgChainType { return fg(this, '\x1b[32m'); },
     /** The yellow foreground color. */
-    get yellow(): AnsiFgChainType { return fg(this, CSI + '33m'); },
+    get yellow(): AnsiFgChainType { return fg(this, '\x1b[33m'); },
     /** The magenta foreground color. */
-    get magenta(): AnsiFgChainType { return fg(this, CSI + '35m'); },
+    get magenta(): AnsiFgChainType { return fg(this, '\x1b[35m'); },
     /** The bright red foreground color. */
-    get redBright(): AnsiFgChainType { return fg(this, CSI + '91m'); },
+    get redBright(): AnsiFgChainType { return fg(this, '\x1b[91m'); },
     /** The bright blue foreground color. */
-    get blueBright(): AnsiFgChainType { return fg(this, CSI + '94m'); },
+    get blueBright(): AnsiFgChainType { return fg(this, '\x1b[94m'); },
     /** The bright cyan foreground color. */
-    get cyanBright(): AnsiFgChainType { return fg(this, CSI + '96m'); },
+    get cyanBright(): AnsiFgChainType { return fg(this, '\x1b[96m'); },
     /** The bright white foreground color. */
-    get whiteBright(): AnsiFgChainType { return fg(this, CSI + '97m'); },
+    get whiteBright(): AnsiFgChainType { return fg(this, '\x1b[97m'); },
     /** The bright green foreground color. */
-    get greenBright(): AnsiFgChainType { return fg(this, CSI + '92m'); },
+    get greenBright(): AnsiFgChainType { return fg(this, '\x1b[92m'); },
     /** The bright black foreground color. */
-    get blackBright(): AnsiFgChainType { return fg(this, CSI + '90m'); },
+    get blackBright(): AnsiFgChainType { return fg(this, '\x1b[90m'); },
     /** The bright yellow foreground color. */
-    get yellowBright(): AnsiFgChainType { return fg(this, CSI + '93m'); },
+    get yellowBright(): AnsiFgChainType { return fg(this, '\x1b[93m'); },
     /** The bright magenta foreground color. */
-    get magentaBright(): AnsiFgChainType { return fg(this, CSI + '95m'); },
+    get magentaBright(): AnsiFgChainType { return fg(this, '\x1b[95m'); },
     /** The dark gray foreground color. */
-    get darkGray(): AnsiFgChainType { return fg(this, CSI + '38;5;238m'); },
+    get darkGray(): AnsiFgChainType { return fg(this, '\x1b[38;5;238m'); },
     /** The light gray foreground color. */
-    get lightGray(): AnsiFgChainType { return fg(this, CSI + '38;5;252m'); },
+    get lightGray(): AnsiFgChainType { return fg(this, '\x1b[38;5;252m'); },
     /** The light cyan foreground color. */
-    get lightCyan(): AnsiFgChainType { return fg(this, CSI + '38;5;81m'); },
+    get lightCyan(): AnsiFgChainType { return fg(this, '\x1b[38;5;81m'); },
     /** The light coral foreground color. */
-    get lightCoral(): AnsiFgChainType { return fg(this, CSI + '38;5;203m'); },
+    get lightCoral(): AnsiFgChainType { return fg(this, '\x1b[38;5;203m'); },
     /** The olive green foreground color. */
-    get oliveGreen(): AnsiFgChainType { return fg(this, CSI + '38;5;149m'); },
+    get oliveGreen(): AnsiFgChainType { return fg(this, '\x1b[38;5;149m'); },
     /** The deep orange foreground color. */
-    get deepOrange(): AnsiFgChainType { return fg(this, CSI + '38;5;166m'); },
+    get deepOrange(): AnsiFgChainType { return fg(this, '\x1b[38;5;166m'); },
     /** The bright pink foreground color. */
-    get brightPink(): AnsiFgChainType { return fg(this, CSI + '38;5;197m'); },
+    get brightPink(): AnsiFgChainType { return fg(this, '\x1b[38;5;197m'); },
     /** The light orange foreground color. */
-    get lightOrange(): AnsiFgChainType { return fg(this, CSI + '38;5;215m'); },
+    get lightOrange(): AnsiFgChainType { return fg(this, '\x1b[38;5;215m'); },
     /** The burnt orange foreground color. */
-    get burntOrange(): AnsiFgChainType { return fg(this, CSI + '38;5;208m'); },
+    get burntOrange(): AnsiFgChainType { return fg(this, '\x1b[38;5;208m'); },
     /** The light yellow foreground color. */
-    get lightYellow(): AnsiFgChainType { return fg(this, CSI + '38;5;230m'); },
+    get lightYellow(): AnsiFgChainType { return fg(this, '\x1b[38;5;230m'); },
     /** The canary yellow foreground color. */
-    get canaryYellow(): AnsiFgChainType { return fg(this, CSI + '38;5;227m'); },
+    get canaryYellow(): AnsiFgChainType { return fg(this, '\x1b[38;5;227m'); },
     /** The light goldenrod yellow foreground color. */
-    get lightGoldenrodYellow(): AnsiFgChainType { return fg(this, CSI + '38;5;221m'); },
+    get lightGoldenrodYellow(): AnsiFgChainType { return fg(this, '\x1b[38;5;221m'); },
 
     /* Background colors */
 
     /** The red background color. */
-    get bgRed(): AnsiBgChainType { return bg(this, CSI + '41m'); },
+    get bgRed(): AnsiBgChainType { return bg(this, '\x1b[41m'); },
     /** The blue background color. */
-    get bgBlue(): AnsiBgChainType { return bg(this, CSI + '44m'); },
+    get bgBlue(): AnsiBgChainType { return bg(this, '\x1b[44m'); },
     /** The cyan background color. */
-    get bgCyan(): AnsiBgChainType { return bg(this, CSI + '46m'); },
+    get bgCyan(): AnsiBgChainType { return bg(this, '\x1b[46m'); },
     /** The gray background color. */
-    get bgGray(): AnsiBgChainType { return bg(this, CSI + '100m'); },
+    get bgGray(): AnsiBgChainType { return bg(this, '\x1b[100m'); },
     /** The black background color. */
-    get bgBlack(): AnsiBgChainType { return bg(this, CSI + '40m'); },
+    get bgBlack(): AnsiBgChainType { return bg(this, '\x1b[40m'); },
     /** The green background color. */
-    get bgGreen(): AnsiBgChainType { return bg(this, CSI + '42m'); },
+    get bgGreen(): AnsiBgChainType { return bg(this, '\x1b[42m'); },
     /** The white background color. */
-    get bgWhite(): AnsiBgChainType { return bg(this, CSI + '47m'); },
+    get bgWhite(): AnsiBgChainType { return bg(this, '\x1b[47m'); },
     /** The yellow background color. */
-    get bgYellow(): AnsiBgChainType { return bg(this, CSI + '43m'); },
+    get bgYellow(): AnsiBgChainType { return bg(this, '\x1b[43m'); },
     /** The magenta background color. */
-    get bgMagenta(): AnsiBgChainType { return bg(this, CSI + '45m'); },
+    get bgMagenta(): AnsiBgChainType { return bg(this, '\x1b[45m'); },
     /** The bright red background color. */
-    get bgRedBright(): AnsiBgChainType { return bg(this, CSI + '101m'); },
+    get bgRedBright(): AnsiBgChainType { return bg(this, '\x1b[101m'); },
     /** The bright blue background color. */
-    get bgBlueBright(): AnsiBgChainType { return bg(this, CSI + '104m'); },
+    get bgBlueBright(): AnsiBgChainType { return bg(this, '\x1b[104m'); },
     /** The bright cyan background color. */
-    get bgCyanBright(): AnsiBgChainType { return bg(this, CSI + '106m'); },
+    get bgCyanBright(): AnsiBgChainType { return bg(this, '\x1b[106m'); },
     /** The bright black background color. */
-    get bgBlackBright(): AnsiBgChainType { return bg(this, CSI + '100m'); },
+    get bgBlackBright(): AnsiBgChainType { return bg(this, '\x1b[100m'); },
     /** The bright white background color. */
-    get bgWhiteBright(): AnsiBgChainType { return bg(this, CSI + '107m'); },
+    get bgWhiteBright(): AnsiBgChainType { return bg(this, '\x1b[107m'); },
     /** The bright green background color. */
-    get bgGreenBright(): AnsiBgChainType { return bg(this, CSI + '102m'); },
+    get bgGreenBright(): AnsiBgChainType { return bg(this, '\x1b[102m'); },
     /** The bright yellow background color. */
-    get bgYellowBright(): AnsiBgChainType { return bg(this, CSI + '103m'); },
+    get bgYellowBright(): AnsiBgChainType { return bg(this, '\x1b[103m'); },
     /** The bright magenta background color. */
-    get bgMagentaBright(): AnsiBgChainType { return bg(this, CSI + '105m'); },
+    get bgMagentaBright(): AnsiBgChainType { return bg(this, '\x1b[105m'); },
 
     /* True color */
 
