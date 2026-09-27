@@ -51,10 +51,6 @@ export function stealFocus(): string {
     return iterm('StealFocus');
 }
 
-export function clearScrollback(): string {
-    return iterm('ClearScrollback');
-}
-
 export function badge(text = ''): string {
     return iterm(`SetBadgeFormat=${ base64(text) }`);
 }
@@ -160,6 +156,9 @@ export function title(text: string, target: 0 | 1 | 2 = 0): string {
 export function hyperlink(text: string, url: string): string {
     return osc(`8;;${ url }`) + text + osc('8;;');
 }
+
+export const notify777 = (title: string, body: string): string =>
+    `${ OSC }777;notify;${ title.replaceAll(';', '') };${ body }${ BEL }`;
 
 export function writeTerminal(sequence: string): boolean {
     const { stdout, stderr } = process;

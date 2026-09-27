@@ -136,6 +136,23 @@ export const ClearLine = `${ CSI }2K`;
 export const ClearDown = `${ CSI }J`;
 
 /**
+ * The sequence that moves the cursor to row 1, column 1.
+ *
+ * @remarks
+ * Both coordinates of the cursor position sequence default to `1`, so this form needs no parameter at all.
+ *
+ * @example
+ * ```ts
+ * `${ CursorHome }title`; // '\x1b[Htitle' - writes at the top left
+ * ```
+ *
+ * @see CursorNextLine
+ * @since 2.0.0
+ */
+
+export const CursorHome = `${ CSI }H`;
+
+/**
  * The pair of sequences that homes the cursor and erases the screen.
  *
  * @remarks
@@ -154,7 +171,7 @@ export const ClearDown = `${ CSI }J`;
  * @since 2.0.0
  */
 
-export const ClearView = `${ CSI }H${ CSI }2J`;
+export const ClearView = `${ CursorHome }${ CSI }2J`;
 
 /**
  * The sequence that drops the scrollback buffer.
@@ -174,23 +191,6 @@ export const ClearView = `${ CSI }H${ CSI }2J`;
  */
 
 export const ClearScrollback = `${ CSI }3J`;
-
-/**
- * The sequence that moves the cursor to row 1, column 1.
- *
- * @remarks
- * Both coordinates of the cursor position sequence default to `1`, so this form needs no parameter at all.
- *
- * @example
- * ```ts
- * `${ CursorHome }title`; // '\x1b[Htitle' - writes at the top left
- * ```
- *
- * @see CursorNextLine
- * @since 2.0.0
- */
-
-export const CursorHome = `${ CSI }H`;
 
 /**
  * The sequence that moves the cursor to the start of the next line.
