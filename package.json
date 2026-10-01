@@ -9,6 +9,7 @@
     "license": "Mozilla Public License Version 2.0",
     "homepage": "https://remotex-labs.github.io/xAnsi",
     "description": "A lightweight ANSI utility library for styling terminal output",
+    "sideEffects": false,
     "repository": {
         "type": "git",
         "url": "git+https://github.com/remotex-labs/xAnsi.git"
@@ -30,28 +31,13 @@
         "escape-codes"
     ],
     "engines": {
-        "node": ">=20"
+        "node": ">=22"
     },
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/esm/index.js",
             "require": "./dist/cjs/index.js"
-        },
-        "./ansi.component": {
-            "types": "./dist/ansi.component.d.ts",
-            "import": "./dist/esm/ansi.component.js",
-            "require": "./dist/cjs/ansi.component.js"
-        },
-        "./xterm.component": {
-            "types": "./dist/xterm.component.d.ts",
-            "import": "./dist/esm/xterm.component.js",
-            "require": "./dist/cjs/xterm.component.js"
-        },
-        "./shadow.service": {
-            "types": "./dist/shadow.service.d.ts",
-            "import": "./dist/esm/shadow.service.js",
-            "require": "./dist/cjs/shadow.service.js"
         }
     },
     "files": [
@@ -77,15 +63,18 @@
         "docs:preview":     "vitepress preview docs"
     },
     "devDependencies": {
-        "eslint": "^10.10.0",
+        "eslint": "^10.12.0",
         "vitepress": "^2.0.0-alpha.20",
         "markdownlint-cli": "^0.49.1",
-        "typescript-eslint": "^8.70.0",
-        "eslint-plugin-tsdoc": "^0.5.2",
-        "eslint-plugin-perfectionist": "^5.11.0",
-        "@types/node": "^25.9.6",
-        "@viteplus/versions": "^2.0.9",
+        "typescript-eslint": "^8.71.1",
+        "eslint-plugin-tsdoc": "^0.5.4",
+        "eslint-plugin-perfectionist": "^5.12.1",
+        "@types/node": "^26.6.4",
+        "@viteplus/versions": "^2.3.0",
         "@remotex-labs/xjet": "^1.5.6",
-        "@remotex-labs/xbuild": "^3.0.3"
+        "@remotex-labs/xbuild": "^3.1.1"
+    },
+    "dependencies": {
+        "@remotex-labs/xobservable": "^1.1.0"
     }
 }

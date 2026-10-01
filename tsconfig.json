@@ -23,8 +23,8 @@
             "@services/*": [
                 "./src/services/*"
             ],
-            "@providers/*": [
-                "./src/providers/*"
+            "@constants/*": [
+                "./src/constants/*"
             ],
             "@components/*": [
                 "./src/components/*"

@@ -1,5 +1,5 @@
 /**
- * Import will remove at compile time
+ * Type-only imports erased during TypeScript compilation.
  */
 
 import type { xBuildConfig } from '@remotex-labs/xbuild';
@@ -28,13 +28,10 @@ export const config: xBuildConfig = {
             packages: 'external',
             sourcemap: 'linked',
             minifySyntax: true,
-            minifyIdentifiers: true,
+            minifyWhitespace: true,
             sourceRoot: `https://github.com/remotex-labs/xAnsi/tree/v${ pkg.version }/`,
             entryPoints: {
-                'index': 'src/index.ts',
-                'shadow.service': 'src/services/shadow.service.ts',
-                'ansi.component': 'src/components/ansi.component.ts',
-                'xterm.component': 'src/components/xterm.component.ts'
+                'index': 'src/index.ts'
             }
         }
     },
